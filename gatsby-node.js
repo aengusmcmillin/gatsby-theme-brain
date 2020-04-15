@@ -201,9 +201,10 @@ exports.createPages = async ({ actions, graphql }, pluginOptions) => {
   `);
 
   const brain = result.data.brain.nodes;
-  const urlPrefix = pluginOptions.urlPrefix || 'brain';
-  const brainTemplate = pluginOptions.brainTemplate || './src/templates/brain.js';
-  const basePage = pluginOptions.basePage || 'brain';
+  const urlPrefix = pluginOptions.urlPrefix || "brain";
+  const brainTemplate =
+    pluginOptions.brainTemplate || "./src/templates/brain.js";
+  const basePage = pluginOptions.basePage || "brain";
   brain.forEach((note) => {
     var slug = note.slug;
     if (basePage == slug) {
