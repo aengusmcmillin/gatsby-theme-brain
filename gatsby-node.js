@@ -2,6 +2,14 @@ const fs = require("fs");
 const matter = require("gray-matter");
 const path = require("path");
 
+exports.onPreBootstrap = (pluginOptions) => {
+  const contentPath = pluginOptions.path || "content/brain/";
+
+  if (!fs.existsSync(contentPath)) {
+    fs.mkdirSync(contentPath, { recursive: true });
+  }
+};
+
 exports.createSchemaCustomization = ({ actions }) => {
   const { createTypes } = actions;
   const typeDefs = `
