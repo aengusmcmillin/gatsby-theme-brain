@@ -85,7 +85,15 @@ module.exports = (
       },
     };
     brainNoteNode.outboundReferences = note.outboundReferences;
-    brainNoteNode.inboundReferences = backlinkMap[slug];
+    let inboundReferences = backlinkMap[slug];
+    // For now removing duplicates because we don't give any other identifying information
+    // Later I will be adding previews of the exact reference so duplicates will be needed
+    if (inboundReferences != null) {
+      inboundReferences = inboundReferences.filter(
+        (a, b) => inboundReferences.indexOf(a) === b
+      );
+    }
+    brainNoteNode.inboundReferences = inboundReferences;
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
 
     createNode(brainNoteNode);
