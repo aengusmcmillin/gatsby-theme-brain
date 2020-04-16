@@ -12,8 +12,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
 
   const brain = result.data.brain.nodes;
   const urlPrefix = pluginOptions.urlPrefix || "brain";
-  const brainTemplate =
-    pluginOptions.brainTemplate || "./src/templates/brain.js";
+  const brainTemplate = pluginOptions.brainTemplate || "./templates/brain.js";
   const basePage = pluginOptions.basePage || "brain";
   brain.forEach((note) => {
     var slug = note.slug;
@@ -23,17 +22,17 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
         component: require.resolve(brainTemplate),
         context: {
           slug: slug,
-          postPath: path,
+          postPath: urlPrefix,
         },
       });
     }
-    var path = `${urlPrefix}/${slug}`;
+    var postPath = `${urlPrefix}/${slug}`;
     createPage({
-      path: path,
+      path: postPath,
       component: require.resolve(brainTemplate),
       context: {
         slug: slug,
-        postPath: path,
+        postPath: postPath,
       },
     });
   });

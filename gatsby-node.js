@@ -1,7 +1,7 @@
-exports.onPreBootstrap = require("./on-pre-bootstrap");
+exports.onPreBootstrap = require("./src/on-pre-bootstrap");
 
-exports.createSchemaCustomization = require("./create-schema-customization");
+exports.createSchemaCustomization = require("./src/create-schema-customization");
 
-exports.sourceNodes = require("./source-nodes");
+exports.sourceNodes = require("./src/source-nodes");
 
-exports.createPages = require("./create-pages");
+exports.createPages = require("./src/create-pages");
