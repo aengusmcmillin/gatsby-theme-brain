@@ -1,9 +1,10 @@
 const fs = require("fs");
 
-module.exports = (pluginOptions) => {
-  const contentPath = pluginOptions.path || "content/brain/";
+module.exports = ({}, pluginOptions) => {
+  const notesDirectory = pluginOptions.notesDirectory || "content/brain/";
+  console.log(`Trying directory ${notesDirectory}`);
 
-  if (!fs.existsSync(contentPath)) {
-    fs.mkdirSync(contentPath, { recursive: true });
+  if (!fs.existsSync(notesDirectory)) {
+    fs.mkdirSync(notesDirectory, { recursive: true });
   }
 };

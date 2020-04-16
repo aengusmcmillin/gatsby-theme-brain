@@ -6,17 +6,101 @@ module.exports = (
   { actions, createNodeId, createContentDigest },
   pluginOptions
 ) => {
+  let notesDirectory = pluginOptions.notesDirectory || "content/brain/";
+
+  let { slugToNoteMap, nameToSlugMap, allReferences } = processNotesDirectory(
+    notesDirectory
+  );
+
+  let backlinkMap = new Map();
+  allReferences.forEach(({ source, references }) => {
+    if (references == null) return;
+
+    references.forEach((reference) => {
+      let lower = reference.toLowerCase();
+      if (nameToSlugMap[lower] == null) {
+        let slug = generateSlug(lower);
+        if (nameToSlugMap[slug] == null) {
+          // Double check that the slugified version isn't already there
+          slugToNoteMap[slug] = {
+            slug: slug,
+            title: slug,
+            content: "",
+            rawContent: "",
+            frontmatter: {
+              title: slug,
+            },
+            outboundReferences: [],
+            inboundReferences: [],
+          };
+          nameToSlugMap[slug] = slug;
+        }
+        nameToSlugMap[lower] = slug;
+      }
+
+      let slug = nameToSlugMap[lower];
+      if (backlinkMap[slug] == null) {
+        backlinkMap[slug] = [];
+      }
+      backlinkMap[slug].push(`${source}`);
+    });
+  });
+
+  let rootPath = pluginOptions.rootPath || "brain";
+  for (var slug in slugToNoteMap) {
+    var note = slugToNoteMap[slug];
+
+    const { createNode } = actions;
+
+    var originalRawContent = note.rawContent;
+    var newRawContent = originalRawContent;
+
+    const regexExclusive = /(?<=\[\[).*?(?=\]\])/g;
+    const regexInclusive = /\[\[.*?\]\]/g;
+    var replacementMatches = originalRawContent.match(regexInclusive);
+    if (replacementMatches != null) {
+      replacementMatches = replacementMatches.filter(
+        (a, b) => replacementMatches.indexOf(a) === b
+      );
+      replacementMatches.forEach((match) => {
+        var justText = match.match(regexExclusive)[0];
+        var link = nameToSlugMap[justText.toLowerCase()];
+        var linkified = `[${match}](/${rootPath}/${link})`;
+        newRawContent = newRawContent.split(match).join(linkified);
+      });
+    }
+
+    const brainNoteNode = {
+      id: createNodeId(`${slug} >>> BrainNote`),
+      title: note.title,
+      slug: slug,
+      content: note.content,
+      rawContent: newRawContent,
+      absolutePath: note.fullPath,
+      children: [],
+      parent: null,
+      internal: {
+        type: `BrainNote`,
+        mediaType: `text/markdown`,
+      },
+    };
+    brainNoteNode.outboundReferences = note.outboundReferences;
+    brainNoteNode.inboundReferences = backlinkMap[slug];
+    brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
+
+    createNode(brainNoteNode);
+  }
+};
+
+function processNotesDirectory(notesDirectory) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
-
   let allReferences = [];
 
-  let dirname = pluginOptions.path || "content/brain/";
-  let urlPrefix = pluginOptions.urlPrefix || "brain";
-  let filenames = fs.readdirSync(dirname);
-  filenames.forEach(function (filename) {
+  let filenames = fs.readdirSync(notesDirectory);
+  filenames.forEach((filename) => {
     let slug = path.parse(filename).name.toLowerCase();
-    let fullPath = dirname + filename;
+    let fullPath = notesDirectory + filename;
     let rawFile = fs.readFileSync(fullPath, "utf-8");
     let fileContents = matter(rawFile);
 
@@ -53,7 +137,6 @@ module.exports = (
       frontmatter.title = slug;
     }
 
-    console.log(`--- ${slug}---`);
     slugToNoteMap[slug] = {
       title: title,
       content: content,
@@ -65,89 +148,12 @@ module.exports = (
     };
   });
 
-  let backlinkMap = new Map();
-  allReferences.forEach(function ({ source, references }) {
-    if (references != null) {
-      references.forEach(function (reference) {
-        let lower = reference.toLowerCase();
-        if (nameToSlugMap[lower] == null) {
-          let slug = generateSlug(lower);
-          if (nameToSlugMap[slug] == null) {
-            // Double check that the slugified version isn't already there
-            console.log(`${slug}--`);
-            slugToNoteMap[slug] = {
-              slug: slug,
-              title: slug,
-              content: "",
-              rawContent: "",
-              frontmatter: {
-                title: slug,
-              },
-              outboundReferences: [],
-              inboundReferences: [],
-            };
-            nameToSlugMap[slug] = slug;
-          }
-          nameToSlugMap[lower] = slug;
-        }
-        let slug = nameToSlugMap[lower];
-        if (backlinkMap[slug] == null) {
-          backlinkMap[slug] = [];
-        }
-        backlinkMap[slug].push(`${source}`);
-      });
-    }
-  });
-
-  console.log(backlinkMap);
-  console.log(slugToNoteMap);
-
-  for (var slug in slugToNoteMap) {
-    var note = slugToNoteMap[slug];
-
-    const { createNode } = actions;
-
-    var originalRawContent = note.rawContent;
-    var newRawContent = originalRawContent;
-
-    const regexExclusive = /(?<=\[\[).*?(?=\]\])/g;
-    const regexInclusive = /\[\[.*?\]\]/g;
-    var replacementMatches = originalRawContent.match(regexInclusive);
-    if (replacementMatches != null) {
-      replacementMatches = replacementMatches.filter(
-        (a, b) => replacementMatches.indexOf(a) === b
-      );
-      console.log(replacementMatches);
-      replacementMatches.forEach((match) => {
-        var justText = match.match(regexExclusive)[0];
-        var link = nameToSlugMap[justText.toLowerCase()];
-        var linkified = `[${match}](/${urlPrefix}/${link})`;
-        newRawContent = newRawContent.split(match).join(linkified);
-      });
-    }
-
-    const brainNoteNode = {
-      id: createNodeId(`${slug} >>> BrainNote`),
-      title: note.title,
-      slug: slug,
-      content: note.content,
-      rawContent: newRawContent,
-      absolutePath: note.fullPath,
-      children: [],
-      parent: null,
-      internal: {
-        type: `BrainNote`,
-        mediaType: `text/markdown`,
-      },
-    };
-    brainNoteNode.outboundReferences = note.outboundReferences;
-    console.log(backlinkMap[slug]);
-    brainNoteNode.inboundReferences = backlinkMap[slug];
-    brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
-
-    createNode(brainNoteNode);
-  }
-};
+  return {
+    slugToNoteMap: slugToNoteMap,
+    nameToSlugMap: nameToSlugMap,
+    allReferences: allReferences,
+  };
+}
 
 function generateSlug(str) {
   str = str.replace(/^\s+|\s+$/g, ""); // trim

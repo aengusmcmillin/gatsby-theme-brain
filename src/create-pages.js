@@ -10,29 +10,30 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
     }
   `);
 
-  const brain = result.data.brain.nodes;
-  const urlPrefix = pluginOptions.urlPrefix || "brain";
-  const brainTemplate = pluginOptions.brainTemplate || "./templates/brain.js";
-  const basePage = pluginOptions.basePage || "brain";
-  brain.forEach((note) => {
+  const brainNotes = result.data.brain.nodes;
+
+  const rootPath = pluginOptions.rootPath || "brain";
+  const rootNote = pluginOptions.rootNote || "brain";
+  const noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
+
+  brainNotes.forEach((note) => {
     var slug = note.slug;
-    if (basePage == slug) {
+    if (rootNote == slug) {
       createPage({
-        path: urlPrefix,
-        component: require.resolve(brainTemplate),
+        path: rootPath,
+        component: require.resolve(noteTemplate),
         context: {
           slug: slug,
-          postPath: urlPrefix,
         },
       });
     }
-    var postPath = `${urlPrefix}/${slug}`;
+
+    var notePath = `${rootPath}/${slug}`;
     createPage({
-      path: postPath,
-      component: require.resolve(brainTemplate),
+      path: notePath,
+      component: require.resolve(noteTemplate),
       context: {
         slug: slug,
-        postPath: postPath,
       },
     });
   });
