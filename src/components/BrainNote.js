@@ -5,13 +5,17 @@ const BrainNote = ({ note }) => {
   let references = [];
   let referenceBlock;
   if (note.inboundReferences != null) {
-    references = note.inboundReferences.map((ref) => <a href={ref}>{ref}</a>);
+    references = note.inboundReferences.map((ref) => (
+      <li>
+        <a href={ref}>{ref}</a>
+      </li>
+    ));
 
     if (references.length > 0) {
       referenceBlock = (
         <>
           <h2>Linked References</h2>
-          {references}
+          <ul>{references}</ul>
         </>
       );
     }

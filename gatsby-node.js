@@ -165,11 +165,15 @@ exports.sourceNodes = (
     const regexInclusive = /\[\[.*?\]\]/g;
     var replacementMatches = originalRawContent.match(regexInclusive);
     if (replacementMatches != null) {
+      replacementMatches = replacementMatches.filter(
+        (a, b) => replacementMatches.indexOf(a) === b
+      );
+      console.log(replacementMatches);
       replacementMatches.forEach((match) => {
         var justText = match.match(regexExclusive)[0];
         var link = nameToSlugMap[justText.toLowerCase()];
         var linkified = `[${match}](/${urlPrefix}/${link})`;
-        newRawContent = newRawContent.replace(match, linkified);
+        newRawContent = newRawContent.split(match).join(linkified);
       });
     }
 
