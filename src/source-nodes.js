@@ -19,7 +19,7 @@ module.exports = (
     references.forEach((reference) => {
       let lower = reference.toLowerCase();
       if (nameToSlugMap[lower] == null) {
-        let slug = generateSlug(lower);
+        let slug = options.generateSlug ? options.generateSlug(reference) : generateSlug(lower);
         if (nameToSlugMap[slug] == null) {
           // Double check that the slugified version isn't already there
           slugToNoteMap[slug] = {
