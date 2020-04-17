@@ -1,44 +1,28 @@
 {
-  "name": "gatsby-theme-brain",
+  "name": "@aengusm/gatsby-theme-brain",
   "author": "Aengus McMillin <aengusmcmillin@gmail.com>",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-      "build": "gatsby build",
-      "develop": "gatsby develop",
-      "clean": "gatsby clean"
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "clean": "gatsby clean"
   },
   "peerDependencies": {
-    "@emotion/core": "^10.0.27",
-    "@emotion/styled": "^10.0.27",
-    "@mdx-js/mdx": "^1.5.3",
-    "@mdx-js/react": "^1.5.3",
-    "gray-matter": "^4.0.2",
-    "gatsby-plugin-emotion": "^4.1.21",
-    "gatsby-plugin-mdx": "^1.0.67",
-    "gatsby-transformer-remark": "^2.6.48",
-    "gatsby-plugin-sharp": "^2.5.3",
-    "gatsby-remark-embed-video": "^2.0.1",
-    "gatsby-remark-images": "^3.1.42",
-    "gatsby": "^2.10.4",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "gatsby": "^2.20.23",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   },
   "devDependencies": {
-    "@emotion/core": "^10.0.27",
-    "@emotion/styled": "^10.0.27",
-    "@mdx-js/mdx": "^1.5.3",
-    "@mdx-js/react": "^1.5.3",
-    "gray-matter": "^4.0.2",
-    "gatsby-plugin-emotion": "^4.1.21",
-    "gatsby-plugin-mdx": "^1.0.67",
-    "gatsby-transformer-remark": "^2.6.48",
-    "gatsby-plugin-sharp": "^2.5.3",
-    "gatsby-remark-embed-video": "^2.0.1",
-    "gatsby-remark-images": "^3.1.42",
-    "gatsby": "^2.10.4",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "gatsby": "^2.20.23",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^1.5.8",
+    "@mdx-js/react": "^1.5.8",
+    "gatsby-plugin-mdx": "^1.1.8",
+    "gatsby-transformer-remark": "^2.7.2"
   }
 }
