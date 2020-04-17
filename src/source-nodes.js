@@ -9,7 +9,7 @@ module.exports = (
   let notesDirectory = pluginOptions.notesDirectory || "content/brain/";
 
   let { slugToNoteMap, nameToSlugMap, allReferences } = processNotesDirectory(
-    notesDirectory
+    notesDirectory, pluginOptions
   );
 
   let backlinkMap = new Map();
@@ -19,7 +19,7 @@ module.exports = (
     references.forEach((reference) => {
       let lower = reference.toLowerCase();
       if (nameToSlugMap[lower] == null) {
-        let slug = generateSlug(lower);
+        let slug = pluginOptions.generateSlug ? pluginOptions.generateSlug(reference) : generateSlug(lower);
         if (nameToSlugMap[slug] == null) {
           // Double check that the slugified version isn't already there
           slugToNoteMap[slug] = {
@@ -100,14 +100,14 @@ module.exports = (
   }
 };
 
-function processNotesDirectory(notesDirectory) {
+function processNotesDirectory(notesDirectory, pluginOptions) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
   let allReferences = [];
 
   let filenames = fs.readdirSync(notesDirectory);
   filenames.forEach((filename) => {
-    let slug = path.parse(filename).name.toLowerCase();
+    let slug = pluginOptions.generateSlug ? pluginOptions.generateSlug(filename) : path.parse(filename).name.toLowerCase();
     let fullPath = notesDirectory + filename;
     let rawFile = fs.readFileSync(fullPath, "utf-8");
     let fileContents = matter(rawFile);
