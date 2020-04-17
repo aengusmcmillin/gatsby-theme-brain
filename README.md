@@ -30,11 +30,18 @@ module.exports = {
 gatsby develop
 ```
 
+## Styling
+
+For now the way to style this theme is with [component shadowing](https://www.gatsbyjs.org/blog/2019-04-29-component-shadowing/). There is a single component that renders the layout for each brain note in src/components/BrainNote.js. If you wish to shadow this and create your own version, create the file src/@aengusm/gatsby-theme-brain/components/BrainNote.js. That will shadow the existing component and you can do whatever you want with it.
+
+If you want an example of how I shadow this, checkout my [websites github](https://github.com/aengusmcmillin/aengusmcmillin.com/blob/master/src/%40aengusm/gatsby-theme-brain/components/BrainNote.js)
+
 ## Usage
 
-| Option           | Default Value          | Description                                                                                  |
-| ---------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
-| `notesDirectory` | "content/brain/"       | Directory containing your brain note files                                                   |
-| `noteTemplate`   | "./templates/brain.js" | Template to use for note rendering                                                           |
-| `rootPath`       | "brain"                | Set the root url for the brain on your site (e.g. in this case https://example.com/brain)    |
-| `rootNote`       | "brain"                | Name of the 'index' note. So in this case brain.md would generate the root page of the brain |
+| Option                   | Default Value          | Description                                                                                                                                                      |
+| ------------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notesDirectory`         | "content/brain/"       | Directory containing your brain note files                                                                                                                       |
+| `noteTemplate`           | "./templates/brain.js" | Template to use for note rendering                                                                                                                               |
+| `rootPath`               | "brain"                | Set the root url for the brain on your site (e.g. in this case https://example.com/brain)                                                                        |
+| `rootNote`               | "brain"                | Name of the 'index' note. So in this case brain.md would generate the root page of the brain                                                                     |
+| `mdxOtherwiseConfigured` | false                  | Used to workaround a bug in gatsby-plugin-mdx (see https://github.com/ChristopherBiscardi/gatsby-mdx/issues/354). Set to true if you have already configured mdx |
