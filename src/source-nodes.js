@@ -27,7 +27,7 @@ module.exports = (
           // Double check that the slugified version isn't already there
           slugToNoteMap[slug] = {
             slug: slug,
-            title: slug,
+            title: reference,
             content: "",
             rawContent: "",
             frontmatter: {
