@@ -65,7 +65,7 @@ module.exports = (
       replacementMatches.forEach((match) => {
         var justText = match.match(regexExclusive)[0];
         var link = nameToSlugMap[justText.toLowerCase()];
-        var linkified = `[${match}](/${rootPath}/${link})`;
+        var linkified = `[${match}](${path.join(rootPath, link)})`;
         newRawContent = newRawContent.split(match).join(linkified);
       });
     }
