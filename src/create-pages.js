@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = async ({ actions, graphql }, pluginOptions) => {
   const { createPage } = actions;
   const result = await graphql(`
@@ -28,7 +30,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
       });
     }
 
-    var notePath = `${rootPath}/${slug}`;
+    var notePath = path.join(rootPath, slug);
     createPage({
       path: notePath,
       component: require.resolve(noteTemplate),
