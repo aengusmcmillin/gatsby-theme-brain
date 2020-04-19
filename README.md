@@ -4,6 +4,45 @@ Use this theme to integrate [Roam Research](https://roamresearch.com/) inspired 
 
 View a demo at https://twitter.com/aengusmcmillin/status/1249845320239984640
 
+## Features
+
+### Double square bracket linking
+
+This is the core feature of the plugin. Based on the model developed by Roam Research, the way it works is that any piece of text wrapped in double square brackets (for example [[some idea]]) will turn into a link to a page. If the page already exists in the graph it will link to that, and if not it will create the page. And when generating that page, a reference is created back to any files that link to it.
+
+This means that you can create pages without any files backing them. They won't have any content, but they will still have the associated backlinks, which makes it incredibly easy to start linking together different notes and references based on common ideas.
+
+For example, lets say you were writing a couple of book reviews on your site. You might create a note for each book as individual markdown files. Now, you could also create a 'books.md' file and add in links to all of your book reviews, but that would be a hassle. Instead, you can simply add something `Tags: [[Books]]` to the top of the each book as you create those notes, and a Books page will be automatically generated containing links to every one of your book reviews!
+
+### Case insensitivity
+
+This is one variation from Roam. In Roam, everything is case sensitive, so if you use [[Book]] and [[book]], those will link to two different places. Because of the way this theme works it didn't make sense to keep that behavior, and I personally get frustrated with it more often than not. So this theme is case insensitive. That means linking to [[Book]], [[BOOK]], and [[book]] all go to the same place.
+
+### Add Frontmatter for titles and aliases
+
+When generating a page from markdown, by default the title of the page will simply be the slug (filename minus extension) of the file. This is often not going to be exactly what you want due to the present of dashes and differences in capitalization. To fix this, you can add frontmatter to your markdown files with the `title` field filled in.
+
+For example:
+
+```
+---
+title: "Some Great Idea I Had"
+---
+```
+
+And there is also a feature that isn't in Roam but can help a little bit with making a Public Brain more readable. It is another attribute of frontmatter called aliases. If you pass an array of strings to `aliases`, during the generation of the graph any double bracketed phrases that match one of those aliases will be linked to that note.
+
+This can be useful for shorthands, plurals, or common misspellings. My favorite way is definitely for plurals so far though. Between this and the case insensitivity, it means you can easily set it up so that, for example, despite having a 'Books' page, you can easily write something like: "Lord of the Rings is a really good [[book]]", and not force yourself to rewrite it as "Lord of the Rings is a really good [[Books]]" for the sake of linking.
+
+You would just make sure that your books.md file has something like this at the top:
+
+```
+---
+title: "Books"
+aliases: ["book"]
+---
+```
+
 ## Installation
 
 To use this theme in your Gatsby site:
@@ -38,11 +77,11 @@ If you want an example of how I shadow this, checkout my [websites github](https
 
 ## Usage
 
-| Option                   | Default Value          | Description                                                                                                                                                      |
-| ------------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `notesDirectory`         | "content/brain/"       | Directory containing your brain note files                                                                                                                       |
-| `noteTemplate`           | "./templates/brain.js" | Template to use for note rendering                                                                                                                               |
-| `rootPath`               | "brain"                | Set the root url for the brain on your site (e.g. in this case https://example.com/brain)                                                                        |
-| `rootNote`               | "brain"                | Name of the 'index' note. So in this case brain.md would generate the root page of the brain                                                                     |
-| `generateSlug`               | `(filename) => slugify(filename)`                | Function used to turn the filename of a note into its resulting slug (path)                                                                     |
-| `mdxOtherwiseConfigured` | false                  | Used to workaround a bug in gatsby-plugin-mdx (see https://github.com/ChristopherBiscardi/gatsby-mdx/issues/354). Set to true if you have already configured mdx |
+| Option                   | Default Value                     | Description                                                                                                                                                      |
+| ------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notesDirectory`         | "content/brain/"                  | Directory containing your brain note files                                                                                                                       |
+| `noteTemplate`           | "./templates/brain.js"            | Template to use for note rendering                                                                                                                               |
+| `rootPath`               | "brain"                           | Set the root url for the brain on your site (e.g. in this case https://example.com/brain)                                                                        |
+| `rootNote`               | "brain"                           | Name of the 'index' note. So in this case brain.md would generate the root page of the brain                                                                     |
+| `generateSlug`           | `(filename) => slugify(filename)` | Function used to turn the filename of a note into its resulting slug (path)                                                                                      |
+| `mdxOtherwiseConfigured` | false                             | Used to workaround a bug in gatsby-plugin-mdx (see https://github.com/ChristopherBiscardi/gatsby-mdx/issues/354). Set to true if you have already configured mdx |
