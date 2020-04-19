@@ -34,7 +34,7 @@ And there is also a feature that isn't in Roam but can help a little bit with ma
 
 This can be useful for shorthands, plurals, or common misspellings. My favorite way is definitely for plurals so far though. Between this and the case insensitivity, it means you can easily set it up so that, for example, despite having a 'Books' page, you can easily write something like: "Lord of the Rings is a really good [[book]]", and not force yourself to rewrite it as "Lord of the Rings is a really good [[Books]]" for the sake of linking.
 
-You would just make sure that your books.md file has something like this at the top:
+You would just make sure that your books markdown file has something like this at the top:
 
 ```
 ---
