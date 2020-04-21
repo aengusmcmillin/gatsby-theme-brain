@@ -10,6 +10,7 @@ module.exports = ({ actions }) => {
       outboundReferences: [String]
       outboundReferenceNotes: [BrainNote]
       inboundReferences: [String]
+      inboundReferenceNotes: [BrainNote]
       childMdx: Mdx
     }
 
