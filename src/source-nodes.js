@@ -106,11 +106,9 @@ module.exports = (
     brainNoteNode.outboundReferenceNotes___NODE = outboundReferenceNoteIds;
 
     if (brainNoteNode.inboundReferences != null) {
-      console.log(`${brainNoteNode.inboundReferences}`);
       var inboundReferenceNoteIds = brainNoteNode.inboundReferences.map(
         (matchSlug) => slugToNoteNodeMap[matchSlug].id
       );
-      console.log(`${inboundReferenceNoteIds}`);
       brainNoteNode.inboundReferenceNotes___NODE = inboundReferenceNoteIds;
     }
 
