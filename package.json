@@ -23,6 +23,8 @@
     "@mdx-js/mdx": "^1.5.8",
     "@mdx-js/react": "^1.5.8",
     "gatsby-plugin-mdx": "^1.1.8",
-    "gatsby-transformer-remark": "^2.7.2"
+    "gatsby-transformer-remark": "^2.7.2",
+    "rehype-stringify": "^7.0.0",
+    "unified": "^9.0.0"
   }
 }

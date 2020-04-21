@@ -4,10 +4,12 @@ import MDXRenderer from "gatsby-plugin-mdx/mdx-renderer";
 const BrainNote = ({ note }) => {
   let references = [];
   let referenceBlock;
-  if (note.inboundReferences != null) {
-    references = note.inboundReferences.map((ref) => (
+  if (note.inboundReferencePreviews != null) {
+    references = note.inboundReferencePreviews.map((ref) => (
       <li>
-        <a href={ref}>{ref}</a>
+        <a href={ref.source}>{ref.source}</a>
+        <br />
+        <div dangerouslySetInnerHTML={{ __html: ref.previewHtml }} />
       </li>
     ));
 
