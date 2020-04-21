@@ -70,7 +70,18 @@ module.exports = (
         mediaType: `text/markdown`,
       },
     };
-    brainNoteNode.outboundReferences = note.outboundReferences;
+    let outboundReferences = note.outboundReferences;
+    // Use the slug for easier use in queries
+    outboundReferences = outboundReferences.map((match) => {
+      return nameToSlugMap[match.toLowerCase()];
+    });
+    // Filter duplicates
+    outboundReferences = outboundReferences.filter(
+      (a, b) => outboundReferences.indexOf(a) === b
+    );
+    brainNoteNode.outboundReferences = outboundReferences;
+    console.log(`${brainNoteNode.outboundReferences}`);
+
     let inboundReferences = backlinkMap[slug];
     // For now removing duplicates because we don't give any other identifying information
     // Later I will be adding previews of the exact reference so duplicates will be needed
@@ -80,6 +91,7 @@ module.exports = (
       );
     }
     brainNoteNode.inboundReferences = inboundReferences;
+
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
 
     createNode(brainNoteNode);
