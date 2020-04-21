@@ -49,10 +49,10 @@ module.exports = (
   });
 
   // Create Nodes
+  let slugToNoteNodeMap = new Map();
   let rootPath = pluginOptions.rootPath || "brain";
   for (var slug in slugToNoteMap) {
     var note = slugToNoteMap[slug];
-    const { createNode } = actions;
 
     const newRawContent = insertLinks(note.content, nameToSlugMap, rootPath);
 
@@ -80,7 +80,6 @@ module.exports = (
       (a, b) => outboundReferences.indexOf(a) === b
     );
     brainNoteNode.outboundReferences = outboundReferences;
-    console.log(`${brainNoteNode.outboundReferences}`);
 
     let inboundReferences = backlinkMap[slug];
     // For now removing duplicates because we don't give any other identifying information
@@ -93,6 +92,20 @@ module.exports = (
     brainNoteNode.inboundReferences = inboundReferences;
 
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
+
+    slugToNoteNodeMap[slug] = brainNoteNode;
+  }
+
+  const { createNode } = actions;
+  for (var slug in slugToNoteNodeMap) {
+    var brainNoteNode = slugToNoteNodeMap[slug];
+
+    var outboundReferenceNoteIds = brainNoteNode.outboundReferences.map(
+      (matchSlug) => slugToNoteNodeMap[matchSlug].id
+    );
+
+    console.log(`outboundIds ${outboundReferenceNoteIds}`);
+    brainNoteNode.outboundReferenceNotes___NODE = outboundReferenceNoteIds;
 
     createNode(brainNoteNode);
   }
