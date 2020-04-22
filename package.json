@@ -1,6 +1,6 @@
 {
-  "name": "@dschapman/gatsby-theme-brain",
-  "author": "Daniel Chapman <daniel@dschapman.com>",
+  "name": "@aengusm/gatsby-theme-brain",
+  "author": "Aengus McMillin <aengusmcmillin@gmail.com>",
   "version": "1.0.4",
   "main": "index.js",
   "license": "MIT",
