@@ -71,15 +71,19 @@ module.exports = (
       },
     };
     let outboundReferences = note.outboundReferences;
-    // Use the slug for easier use in queries
-    outboundReferences = outboundReferences.map((match) => {
-      return nameToSlugMap[match.toLowerCase()];
-    });
-    // Filter duplicates
-    outboundReferences = outboundReferences.filter(
-      (a, b) => outboundReferences.indexOf(a) === b
-    );
-    brainNoteNode.outboundReferences = outboundReferences;
+
+
+    if (outboundReferences) {
+      // Use the slug for easier use in queries
+      outboundReferences = outboundReferences.map((match) => {
+        return nameToSlugMap[match.toLowerCase()];
+      });
+      // Filter duplicates
+      outboundReferences = outboundReferences.filter(
+        (a, b) => outboundReferences.indexOf(a) === b
+      );
+      brainNoteNode.outboundReferences = outboundReferences;
+    }
 
     let inboundReferences = backlinkMap[slug];
     // For now removing duplicates because we don't give any other identifying information
