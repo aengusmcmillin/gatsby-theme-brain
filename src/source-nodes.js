@@ -103,12 +103,12 @@ module.exports = (
   const { createNode } = actions;
   for (var slug in slugToNoteNodeMap) {
     var brainNoteNode = slugToNoteNodeMap[slug];
-
+    if(brainNoteNode.outboundReferences){
     var outboundReferenceNoteIds = brainNoteNode.outboundReferences.map(
       (matchSlug) => slugToNoteNodeMap[matchSlug].id
     );
     brainNoteNode.outboundReferenceNotes___NODE = outboundReferenceNoteIds;
-
+    }
     if (brainNoteNode.inboundReferences != null) {
       var inboundReferenceNoteIds = brainNoteNode.inboundReferences.map(
         (matchSlug) => slugToNoteNodeMap[matchSlug].id
