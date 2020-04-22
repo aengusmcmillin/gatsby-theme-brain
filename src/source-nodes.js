@@ -72,7 +72,6 @@ module.exports = (
     };
     let outboundReferences = note.outboundReferences;
     // Use the slug for easier use in queries
-    if(outboundReferences != null){
     outboundReferences = outboundReferences.map((match) => {
       return nameToSlugMap[match.toLowerCase()];
     });
@@ -80,7 +79,6 @@ module.exports = (
     outboundReferences = outboundReferences.filter(
       (a, b) => outboundReferences.indexOf(a) === b
     );
-    }
     brainNoteNode.outboundReferences = outboundReferences;
 
     let inboundReferences = backlinkMap[slug];
