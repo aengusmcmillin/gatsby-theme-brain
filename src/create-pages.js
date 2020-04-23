@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require("path");
 
 module.exports = async ({ actions, graphql }, pluginOptions) => {
   const { createPage } = actions;
@@ -19,7 +19,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
   const noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
 
   brainNotes.forEach((note) => {
-    var slug = note.slug;
+    let slug = note.slug;
     if (rootNote == slug) {
       createPage({
         path: rootPath,
@@ -30,7 +30,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
       });
     }
 
-    var notePath = path.join(rootPath, slug);
+    let notePath = path.join(rootPath, slug);
     createPage({
       path: notePath,
       component: require.resolve(noteTemplate),

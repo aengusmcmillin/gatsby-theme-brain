@@ -1,5 +1,6 @@
 module.exports = ({ actions }) => {
   const { createTypes } = actions;
+
   const typeDefs = `
     type BrainNote implements Node {
       title: String!
