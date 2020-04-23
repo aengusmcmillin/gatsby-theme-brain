@@ -1,7 +1,7 @@
 {
   "name": "@aengusm/gatsby-theme-brain",
   "author": "Aengus McMillin <aengusmcmillin@gmail.com>",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
