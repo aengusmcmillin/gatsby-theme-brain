@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require("path");
 
 module.exports = async ({ actions, graphql }, pluginOptions) => {
   const { createPage } = actions;
@@ -17,6 +17,9 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
   const rootPath = pluginOptions.rootPath || "brain";
   const rootNote = pluginOptions.rootNote || "brain";
   const noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
+  const graphOverviewTemplate =
+    pluginOptions.graphOverviewTemplate || "./templates/graph-overview.js";
+  const graphOverviewPath = pluginOptions.graphOverviewPath || "graph-overview";
 
   brainNotes.forEach((note) => {
     var slug = note.slug;
@@ -38,5 +41,10 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
         slug: slug,
       },
     });
+  });
+
+  createPage({
+    path: graphOverviewPath,
+    component: require.resolve(graphOverviewTemplate),
   });
 };
