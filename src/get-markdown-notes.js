@@ -8,27 +8,25 @@ module.exports = (pluginOptions) => {
     ".mdx",
   ];
 
-  let fileContents = [];
-
   let filenames = fs.readdirSync(notesDirectory);
 
-  filenames
+  return filenames
     .filter((filename) => {
       return notesFileExtensions.includes(path.extname(filename).toLowerCase());
     })
-    .forEach((filename) => {
+    .map((filename) => {
       let slug = pluginOptions.generateSlug
         ? pluginOptions.generateSlug(filename)
         : path.parse(filename).name.toLowerCase();
+  
       let fullPath = notesDirectory + filename;
       let rawFile = fs.readFileSync(fullPath, "utf-8");
-      fileContents.push({
+  
+      return {
         filename: filename,
         fullPath: fullPath,
         slug: slug,
         rawFile: rawFile,
-      });
+      };
     });
-
-  return fileContents;
 };

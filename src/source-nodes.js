@@ -13,15 +13,18 @@ module.exports = (
   );
 
   let backlinkMap = new Map();
+
   allReferences.forEach(({ source, references }) => {
     if (references == null) return;
 
     references.forEach((reference) => {
       let lower = reference.toLowerCase();
+
       if (nameToSlugMap[lower] == null) {
         let slug = pluginOptions.generateSlug
           ? pluginOptions.generateSlug(reference)
           : generateSlug(lower);
+
         if (nameToSlugMap[slug] == null) {
           // Double check that the slugified version isn't already there
           slugToNoteMap[slug] = {
@@ -37,6 +40,7 @@ module.exports = (
           };
           nameToSlugMap[slug] = slug;
         }
+
         nameToSlugMap[lower] = slug;
       }
 
@@ -51,8 +55,9 @@ module.exports = (
   // Create Nodes
   let slugToNoteNodeMap = new Map();
   let rootPath = pluginOptions.rootPath || "brain";
-  for (var slug in slugToNoteMap) {
-    var note = slugToNoteMap[slug];
+
+  for (let slug in slugToNoteMap) {
+    let note = slugToNoteMap[slug];
 
     const newRawContent = insertLinks(note.content, nameToSlugMap, rootPath);
 
@@ -70,30 +75,20 @@ module.exports = (
         mediaType: `text/markdown`,
       },
     };
+
     let outboundReferences = note.outboundReferences;
-
-
-    if (outboundReferences) {
+    brainNoteNode.outboundReferences = outboundReferences
       // Use the slug for easier use in queries
-      outboundReferences = outboundReferences.map((match) => {
-        return nameToSlugMap[match.toLowerCase()];
-      });
+      .map((match) => nameToSlugMap[match.toLowerCase()])
       // Filter duplicates
-      outboundReferences = outboundReferences.filter(
-        (a, b) => outboundReferences.indexOf(a) === b
-      );
-      brainNoteNode.outboundReferences = outboundReferences;
-    }
+      .filter((a, b) => outboundReferences.indexOf(a) === b);
 
-    let inboundReferences = backlinkMap[slug];
+    let inboundReferences = backlinkMap[slug] || [];
     // For now removing duplicates because we don't give any other identifying information
     // Later I will be adding previews of the exact reference so duplicates will be needed
-    if (inboundReferences != null) {
-      inboundReferences = inboundReferences.filter(
-        (a, b) => inboundReferences.indexOf(a) === b
-      );
-    }
-    brainNoteNode.inboundReferences = inboundReferences;
+    brainNoteNode.inboundReferences = inboundReferences.filter(
+      (a, b) => inboundReferences.indexOf(a) === b
+    );
 
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
 
@@ -101,20 +96,18 @@ module.exports = (
   }
 
   const { createNode } = actions;
-  for (var slug in slugToNoteNodeMap) {
-    var brainNoteNode = slugToNoteNodeMap[slug];
-    if(brainNoteNode.outboundReferences) {
-      var outboundReferenceNoteIds = brainNoteNode.outboundReferences.map(
-        (matchSlug) => slugToNoteNodeMap[matchSlug].id
-      );
-      brainNoteNode.outboundReferenceNotes___NODE = outboundReferenceNoteIds;
-    }
-    if (brainNoteNode.inboundReferences != null) {
-      var inboundReferenceNoteIds = brainNoteNode.inboundReferences.map(
-        (matchSlug) => slugToNoteNodeMap[matchSlug].id
-      );
-      brainNoteNode.inboundReferenceNotes___NODE = inboundReferenceNoteIds;
-    }
+  for (let slug in slugToNoteNodeMap) {
+    let brainNoteNode = slugToNoteNodeMap[slug];
+
+    let outboundReferenceNoteIds = brainNoteNode.outboundReferences.map(
+      (matchSlug) => slugToNoteNodeMap[matchSlug].id
+    );
+    brainNoteNode.outboundReferenceNotes___NODE = outboundReferenceNoteIds;
+
+    let inboundReferenceNoteIds = brainNoteNode.inboundReferences.map(
+      (matchSlug) => slugToNoteNodeMap[matchSlug].id
+    );
+    brainNoteNode.inboundReferenceNotes___NODE = inboundReferenceNoteIds;
 
     createNode(brainNoteNode);
   }
@@ -125,22 +118,19 @@ function processMarkdownNotes(markdownNotes) {
   let nameToSlugMap = new Map();
   let allReferences = [];
 
-  markdownNotes.forEach((note) => {
-    let slug = note.slug;
-    let fullPath = note.fullPath;
-    let rawFile = note.rawFile;
-
+  markdownNotes.forEach(({ slug, fullPath, rawFile }) => {
     let fileContents = matter(rawFile);
-
     let content = fileContents.content;
     let frontmatter = fileContents.data;
 
     let title = slug;
     nameToSlugMap[slug] = slug;
+
     if (frontmatter.title != null) {
       title = frontmatter.title;
       nameToSlugMap[frontmatter.title.toLowerCase()] = slug;
     }
+
     if (frontmatter.aliases != null) {
       frontmatter.aliases
         .map((a) => a.toLowerCase())
@@ -149,13 +139,11 @@ function processMarkdownNotes(markdownNotes) {
         });
     }
 
+    // Find matches for content between double brackets
+    // e.g. [[Test]] -> Test
     const regex = /(?<=\[\[).*?(?=\]\])/g;
-    let outboundReferences = content.match(regex);
-    if (outboundReferences != null) {
-      outboundReferences = outboundReferences.map(function (match) {
-        return match;
-      });
-    }
+    let outboundReferences = content.match(regex) || [];
+
     allReferences.push({
       source: slug,
       references: outboundReferences,
