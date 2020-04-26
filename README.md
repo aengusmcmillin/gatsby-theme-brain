@@ -79,7 +79,7 @@ If you want an example of how I shadow this, checkout my [websites github](https
 
 If you want to modify the Graph Overview page you can do so by [extending](https://www.gatsbyjs.org/docs/theme-api/#extending) the `GraphOverview` component.
 
-Here's an example of extending the component to fill the parent and be responsive to the current them.
+Here's an example of extending the component to fill the parent and be responsive to the current theme:
 
 ```js
 // src/@aengusm/gatsby-theme-brain/components/GraphOverview.js
