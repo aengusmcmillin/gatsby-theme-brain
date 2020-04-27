@@ -207,10 +207,8 @@ function processMarkdownNotes(markdownNotes) {
     let outboundReferences = [...content.matchAll(regex)] || [];
     outboundReferences = outboundReferences.map(function (match) {
       let text = match[0];
-      let length = text.length;
       let start = match.index;
-      let end = start + length;
-      let { parent, child } = findDeepestChildForPosition(null, tree, start);
+      let { parent } = findDeepestChildForPosition(null, tree, start);
       // Adding this logic to avoid including too large an amount of content. May need additional heuristics to improve this
       // Right now it essentially will just capture the bullet point or paragraph where it is mentioned.
       let maxDepth = 2;
@@ -232,9 +230,6 @@ function processMarkdownNotes(markdownNotes) {
 
       return {
         text: text,
-        length: length,
-        start: start,
-        end: end,
         previewMarkdown: previewMarkdown,
       };
     });
