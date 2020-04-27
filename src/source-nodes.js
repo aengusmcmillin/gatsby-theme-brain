@@ -111,7 +111,8 @@ module.exports = (
         let linkifiedMarkdown = insertLinks(
           previewMarkdown,
           nameToSlugMap,
-          rootPath
+          rootPath,
+          pluginOptions
         );
 
         let previewHtml = unified()
@@ -175,8 +176,8 @@ function findDeepestChildForPosition(parent, tree, position) {
     }
   }
   return {
-    parent: tree,
-    child: null,
+    parent: parent,
+    child: tree,
   };
 }
 
@@ -212,8 +213,9 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
     const regex = /(?<=\[\[).*?(?=\]\])/g;
     let outboundReferences = [...content.matchAll(regex)] || [];
     if (pluginOptions.linkifyHashtags) {
-      const hashtagRegexExclusive = /(?<=#)\w*\b/g;
-      let hashtagReferences = content.match(hashtagRegexExclusive) || [];
+      const hashtagRegexExclusive = /(?<=(^|\s)#)\w*\b/g;
+      let hashtagReferences =
+        [...content.matchAll(hashtagRegexExclusive)] || [];
       outboundReferences = outboundReferences.concat(hashtagReferences);
     }
     outboundReferences = outboundReferences.map(function (match) {

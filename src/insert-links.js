@@ -25,11 +25,11 @@ module.exports = (
   if (pluginOptions.linkifyHashtags) {
     // Find matches for content after hashtag
     // e.g. #Example -> Example
-    const hashtagRegexExclusive = /(?<=#)\w*\b/g;
+    const hashtagRegexExclusive = /(?<=(^|\s)#)\w*\b/g;
 
     // Find matches for content after hashtag, including the hashtag
     // e.g. #Example -> #Example
-    const hashtagRegexInclusive = /(#\w*)\b/g;
+    const hashtagRegexInclusive = /(?<=(^|\s))(#\w*)\b/g;
     newRawContent = replaceBasedOnRegex(
       hashtagRegexInclusive,
       hashtagRegexExclusive,
@@ -59,10 +59,10 @@ function replaceBasedOnRegex(
   replacementMatches = replacementMatches
     .filter((a, b) => replacementMatches.indexOf(a) === b)
     .forEach((match) => {
-      var justText = match.match(regexExclusive)[0];
-      var link = nameToSlugMap[justText.toLowerCase()];
-      var linkPath = path.join("/", rootPath, link);
-      var linkified = `[${match}](${linkPath})`;
+      let justText = match.match(regexExclusive)[0];
+      let link = nameToSlugMap[justText.toLowerCase()];
+      let linkPath = path.join("/", rootPath, link);
+      let linkified = `[${match}](${linkPath})`;
       newRawContent = newRawContent.split(match).join(linkified);
     });
 
