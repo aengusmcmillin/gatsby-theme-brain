@@ -75,6 +75,50 @@ For now the way to style this theme is with [component shadowing](https://www.ga
 
 If you want an example of how I shadow this, checkout my [websites github](https://github.com/aengusmcmillin/aengusmcmillin.com/blob/master/src/%40aengusm/gatsby-theme-brain/components/BrainNote.js)
 
+### Extending the GraphOverview component
+
+If you want to modify the Graph Overview page you can do so by [extending](https://www.gatsbyjs.org/docs/theme-api/#extending) the `GraphOverview` component.
+
+Here's an example of extending the component to fill the parent and be responsive to the current theme:
+
+```js
+// src/@aengusm/gatsby-theme-brain/components/GraphOverview.js
+
+import GraphOverview from "@aengusm/gatsby-theme-brain/src/components/GraphOverview";
+import React from "react";
+import { useColorMode } from "@chakra-ui/core";
+
+import SEO from "../../../components/SEO";
+import Layout from "../../../components/Layout";
+
+export default (props) => {
+  const { colorMode } = useColorMode();
+
+  return (
+    <Layout>
+      <SEO title="Graph Overview" />
+      <GraphOverview
+        style={{ width: "100%", height: "100%" }}
+        stylesheet={[
+          {
+            selector: "node",
+            style: {
+              label: "data(label)",
+              color: colorMode === "light" ? "#000000" : "#ffffff",
+              backgroundColor: "#545454",
+              "text-wrap": "wrap",
+              "text-max-width": 100,
+              "font-size": 12,
+            },
+          },
+        ]}
+        {...props}
+      />
+    </Layout>
+  );
+};
+```
+
 ## Usage
 
 | Option                   | Default Value                     | Description                                                                                                                                                      |
@@ -85,4 +129,6 @@ If you want an example of how I shadow this, checkout my [websites github](https
 | `rootPath`               | "brain"                           | Set the root url for the brain on your site (e.g. in this case https://example.com/brain)                                                                        |
 | `rootNote`               | "brain"                           | Name of the 'index' note. So in this case brain.md would generate the root page of the brain                                                                     |
 | `generateSlug`           | `(filename) => slugify(filename)` | Function used to turn the filename of a note into its resulting slug (path)                                                                                      |
+| `graphOverviewTemplate`  | "./templates/graph-overview.js"   | Template to use for the graph overview                                                                                                                           |
+| `graphOverviewPath`      | "graph-overview"                  | The route for the graph overview (e.g. in this case https://example.com/graph-overview)                                                                 |
 | `mdxOtherwiseConfigured` | false                             | Used to workaround a bug in gatsby-plugin-mdx (see https://github.com/ChristopherBiscardi/gatsby-mdx/issues/354). Set to true if you have already configured mdx |
