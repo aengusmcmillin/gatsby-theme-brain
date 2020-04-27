@@ -17,7 +17,8 @@ module.exports = (
 ) => {
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
-    markdownNotes
+    markdownNotes,
+    pluginOptions
   );
 
   let backlinkMap = new Map();
@@ -71,7 +72,12 @@ module.exports = (
   for (let slug in slugToNoteMap) {
     let note = slugToNoteMap[slug];
 
-    const newRawContent = insertLinks(note.content, nameToSlugMap, rootPath);
+    const newRawContent = insertLinks(
+      note.content,
+      nameToSlugMap,
+      rootPath,
+      pluginOptions
+    );
 
     const brainNoteNode = {
       id: createNodeId(`${slug} >>> BrainNote`),
@@ -105,7 +111,8 @@ module.exports = (
         let linkifiedMarkdown = insertLinks(
           previewMarkdown,
           nameToSlugMap,
-          rootPath
+          rootPath,
+          pluginOptions
         );
 
         let previewHtml = unified()
@@ -169,12 +176,12 @@ function findDeepestChildForPosition(parent, tree, position) {
     }
   }
   return {
-    parent: tree,
-    child: null,
+    parent: parent,
+    child: tree,
   };
 }
 
-function processMarkdownNotes(markdownNotes) {
+function processMarkdownNotes(markdownNotes, pluginOptions) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
   let allReferences = [];
@@ -205,6 +212,12 @@ function processMarkdownNotes(markdownNotes) {
     // e.g. [[Test]] -> Test
     const regex = /(?<=\[\[).*?(?=\]\])/g;
     let outboundReferences = [...content.matchAll(regex)] || [];
+    if (pluginOptions.linkifyHashtags) {
+      const hashtagRegexExclusive = /(?<=(^|\s)#)\w*\b/g;
+      let hashtagReferences =
+        [...content.matchAll(hashtagRegexExclusive)] || [];
+      outboundReferences = outboundReferences.concat(hashtagReferences);
+    }
     outboundReferences = outboundReferences.map(function (match) {
       let text = match[0];
       let start = match.index;
