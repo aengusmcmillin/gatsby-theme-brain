@@ -5,8 +5,11 @@ const generateSlug = require("./generate-slug");
 
 const unified = require("unified");
 const markdown = require("remark-parse");
+const stringifyMd = require("remark-stringify");
 const html = require("rehype-stringify");
-var toHast = require("mdast-util-to-hast");
+const remark2rehype = require("remark-rehype");
+
+const textNoEscaping = require("./text-no-escaping");
 
 module.exports = (
   { actions, createNodeId, createContentDigest },
@@ -22,7 +25,7 @@ module.exports = (
   allReferences.forEach(({ source, references }) => {
     if (references == null) return;
 
-    references.forEach(({ text, previewHtml }) => {
+    references.forEach(({ text, previewMarkdown }) => {
       let reference = text;
       let lower = reference.toLowerCase();
 
@@ -56,7 +59,7 @@ module.exports = (
       }
       backlinkMap[slug].push({
         source: source,
-        previewHtml: previewHtml,
+        previewMarkdown: previewMarkdown,
       });
     });
   });
@@ -97,7 +100,27 @@ module.exports = (
     brainNoteNode.inboundReferences = inboundReferenceSlugs.filter(
       (a, b) => inboundReferenceSlugs.indexOf(a) === b
     );
-    brainNoteNode.inboundReferencePreviews = inboundReferences;
+    brainNoteNode.inboundReferencePreviews = inboundReferences.map(
+      ({ source, previewMarkdown }) => {
+        let linkifiedMarkdown = insertLinks(
+          previewMarkdown,
+          nameToSlugMap,
+          rootPath
+        );
+
+        let previewHtml = unified()
+          .use(markdown, { gfm: true, commonmark: true, pedantic: true })
+          .use(remark2rehype)
+          .use(html)
+          .processSync(linkifiedMarkdown)
+          .toString();
+        return {
+          source: source,
+          previewMarkdown: linkifiedMarkdown,
+          previewHtml: previewHtml,
+        };
+      }
+    );
 
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
 
@@ -188,7 +211,9 @@ function processMarkdownNotes(markdownNotes) {
       let start = match.index;
       let end = start + length;
       let { parent, child } = findDeepestChildForPosition(null, tree, start);
-      let maxDepth = 4; // Adding this logic to avoid including too large an amount of content. May need additional heuristics to improve this
+      // Adding this logic to avoid including too large an amount of content. May need additional heuristics to improve this
+      // Right now it essentially will just capture the bullet point or paragraph where it is mentioned.
+      let maxDepth = 2;
       for (
         let i = 0;
         i < maxDepth &&
@@ -199,14 +224,18 @@ function processMarkdownNotes(markdownNotes) {
         parent = parent.parent;
       }
 
-      let previewHtml = unified().use(html).stringify(toHast(parent.node));
+      let processor = unified()
+        .use(stringifyMd, { commonmark: true })
+        .use(textNoEscaping)
+        .freeze();
+      let previewMarkdown = processor.stringify(parent.node);
 
       return {
         text: text,
         length: length,
         start: start,
         end: end,
-        previewHtml: previewHtml,
+        previewMarkdown: previewMarkdown,
       };
     });
     allReferences.push({
