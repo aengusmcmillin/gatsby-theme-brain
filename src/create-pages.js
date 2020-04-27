@@ -43,8 +43,8 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
     });
   });
 
-  createPage({
-    path: graphOverviewPath,
-    component: require.resolve(graphOverviewTemplate),
-  });
+  // createPage({
+  //   path: graphOverviewPath,
+  //   component: require.resolve(graphOverviewTemplate),
+  // });
 };
