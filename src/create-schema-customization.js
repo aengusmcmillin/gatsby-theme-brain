@@ -12,12 +12,12 @@ module.exports = ({ actions }) => {
       outboundReferenceNotes: [BrainNote]
       inboundReferences: [String]
       inboundReferenceNotes: [BrainNote]
+      inboundReferencePreview: [InboundReferencePreview]
       childMdx: Mdx
     }
 
-    type BrainFragment {
-      pageTitle: String!
-      link: String!
+    type InboundReferencePreview {
+      source: String!
       previewHtml: String!
     }
   `;

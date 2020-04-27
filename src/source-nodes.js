@@ -3,6 +3,14 @@ const getMarkdownNotes = require("./get-markdown-notes");
 const insertLinks = require("./insert-links");
 const generateSlug = require("./generate-slug");
 
+const unified = require("unified");
+const markdown = require("remark-parse");
+const stringifyMd = require("remark-stringify");
+const html = require("rehype-stringify");
+const remark2rehype = require("remark-rehype");
+
+const textNoEscaping = require("./text-no-escaping");
+
 module.exports = (
   { actions, createNodeId, createContentDigest },
   pluginOptions
@@ -17,7 +25,8 @@ module.exports = (
   allReferences.forEach(({ source, references }) => {
     if (references == null) return;
 
-    references.forEach((reference) => {
+    references.forEach(({ text, previewMarkdown }) => {
+      let reference = text;
       let lower = reference.toLowerCase();
 
       if (nameToSlugMap[lower] == null) {
@@ -48,7 +57,10 @@ module.exports = (
       if (backlinkMap[slug] == null) {
         backlinkMap[slug] = [];
       }
-      backlinkMap[slug].push(`${source}`);
+      backlinkMap[slug].push({
+        source: source,
+        previewMarkdown: previewMarkdown,
+      });
     });
   });
 
@@ -79,15 +91,35 @@ module.exports = (
     let outboundReferences = note.outboundReferences;
     brainNoteNode.outboundReferences = outboundReferences
       // Use the slug for easier use in queries
-      .map((match) => nameToSlugMap[match.toLowerCase()])
+      .map((match) => nameToSlugMap[match.text.toLowerCase()])
       // Filter duplicates
       .filter((a, b) => outboundReferences.indexOf(a) === b);
 
     let inboundReferences = backlinkMap[slug] || [];
-    // For now removing duplicates because we don't give any other identifying information
-    // Later I will be adding previews of the exact reference so duplicates will be needed
-    brainNoteNode.inboundReferences = inboundReferences.filter(
-      (a, b) => inboundReferences.indexOf(a) === b
+    let inboundReferenceSlugs = inboundReferences.map(({ source }) => source);
+    brainNoteNode.inboundReferences = inboundReferenceSlugs.filter(
+      (a, b) => inboundReferenceSlugs.indexOf(a) === b
+    );
+    brainNoteNode.inboundReferencePreviews = inboundReferences.map(
+      ({ source, previewMarkdown }) => {
+        let linkifiedMarkdown = insertLinks(
+          previewMarkdown,
+          nameToSlugMap,
+          rootPath
+        );
+
+        let previewHtml = unified()
+          .use(markdown, { gfm: true, commonmark: true, pedantic: true })
+          .use(remark2rehype)
+          .use(html)
+          .processSync(linkifiedMarkdown)
+          .toString();
+        return {
+          source: source,
+          previewMarkdown: linkifiedMarkdown,
+          previewHtml: previewHtml,
+        };
+      }
     );
 
     brainNoteNode.internal.contentDigest = createContentDigest(brainNoteNode);
@@ -113,6 +145,35 @@ module.exports = (
   }
 };
 
+function findDeepestChildForPosition(parent, tree, position) {
+  if (!tree.children || tree.children.length == 0) {
+    return {
+      parent: parent,
+      child: tree,
+    };
+  }
+
+  for (child of tree.children) {
+    if (
+      child.position.start.offset <= position &&
+      child.position.end.offset >= position
+    ) {
+      return findDeepestChildForPosition(
+        {
+          parent: parent,
+          node: tree,
+        },
+        child,
+        position
+      );
+    }
+  }
+  return {
+    parent: tree,
+    child: null,
+  };
+}
+
 function processMarkdownNotes(markdownNotes) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
@@ -122,6 +183,7 @@ function processMarkdownNotes(markdownNotes) {
     let fileContents = matter(rawFile);
     let content = fileContents.content;
     let frontmatter = fileContents.data;
+    var tree = unified().use(markdown).parse(content);
 
     let title = slug;
     nameToSlugMap[slug] = slug;
@@ -142,8 +204,35 @@ function processMarkdownNotes(markdownNotes) {
     // Find matches for content between double brackets
     // e.g. [[Test]] -> Test
     const regex = /(?<=\[\[).*?(?=\]\])/g;
-    let outboundReferences = content.match(regex) || [];
+    let outboundReferences = [...content.matchAll(regex)] || [];
+    outboundReferences = outboundReferences.map(function (match) {
+      let text = match[0];
+      let start = match.index;
+      let { parent } = findDeepestChildForPosition(null, tree, start);
+      // Adding this logic to avoid including too large an amount of content. May need additional heuristics to improve this
+      // Right now it essentially will just capture the bullet point or paragraph where it is mentioned.
+      let maxDepth = 2;
+      for (
+        let i = 0;
+        i < maxDepth &&
+        parent.parent != null &&
+        parent.parent.node.type !== "root";
+        i++
+      ) {
+        parent = parent.parent;
+      }
 
+      let processor = unified()
+        .use(stringifyMd, { commonmark: true })
+        .use(textNoEscaping)
+        .freeze();
+      let previewMarkdown = processor.stringify(parent.node);
+
+      return {
+        text: text,
+        previewMarkdown: previewMarkdown,
+      };
+    });
     allReferences.push({
       source: slug,
       references: outboundReferences,

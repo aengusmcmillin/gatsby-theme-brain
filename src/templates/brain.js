@@ -12,6 +12,10 @@ export const query = graphql`
       slug
       title
       inboundReferences
+      inboundReferencePreviews {
+        source
+        previewHtml
+      }
       childMdx {
         body
       }
