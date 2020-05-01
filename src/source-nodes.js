@@ -21,6 +21,9 @@ module.exports = (
     pluginOptions
   );
 
+  let noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
+  noteTemplate = require.resolve(noteTemplate);
+
   let backlinkMap = new Map();
 
   allReferences.forEach(({ source, references }) => {
@@ -45,6 +48,7 @@ module.exports = (
             frontmatter: {
               title: slug,
             },
+            noteTemplate: noteTemplate,
             outboundReferences: [],
             inboundReferences: [],
           };
@@ -86,6 +90,7 @@ module.exports = (
       content: note.content,
       rawContent: newRawContent,
       absolutePath: note.fullPath,
+      noteTemplate: note.noteTemplate,
       children: [],
       parent: null,
       internal: {
@@ -186,6 +191,8 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
   let nameToSlugMap = new Map();
   let allReferences = [];
 
+  const additionalNoteTypes = pluginOptions.additionalNoteTypes || {};
+
   markdownNotes.forEach(({ slug, fullPath, rawFile }) => {
     let fileContents = matter(rawFile);
     let content = fileContents.content;
@@ -206,6 +213,15 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
         .forEach((alias) => {
           nameToSlugMap[alias] = slug;
         });
+    }
+
+    let noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
+    noteTemplate = require.resolve(noteTemplate);
+    if (frontmatter.noteType != null) {
+      let noteType = frontmatter.noteType;
+      if (noteType in additionalNoteTypes) {
+        noteTemplate = additionalNoteTypes[noteType];
+      }
     }
 
     // Find matches for content between double brackets
@@ -262,6 +278,7 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
       fullPath: fullPath,
       frontmatter: frontmatter,
       outboundReferences: outboundReferences,
+      noteTemplate: noteTemplate,
       inboundReferences: [],
     };
   });
