@@ -7,6 +7,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
       brain: allBrainNote {
         nodes {
           slug
+          noteTemplate
         }
       }
     }
@@ -16,7 +17,6 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
 
   const rootPath = pluginOptions.rootPath || "brain";
   const rootNote = pluginOptions.rootNote || "brain";
-  const noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
   const graphOverviewTemplate =
     pluginOptions.graphOverviewTemplate || "./templates/graph-overview.js";
   const graphOverviewPath = pluginOptions.graphOverviewPath || "graph-overview";
@@ -26,7 +26,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
     if (rootNote == slug) {
       createPage({
         path: rootPath,
-        component: require.resolve(noteTemplate),
+        component: path.resolve(note.noteTemplate),
         context: {
           slug: slug,
         },
@@ -36,7 +36,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
     let notePath = path.join(rootPath, slug);
     createPage({
       path: notePath,
-      component: require.resolve(noteTemplate),
+      component: path.resolve(note.noteTemplate),
       context: {
         slug: slug,
       },

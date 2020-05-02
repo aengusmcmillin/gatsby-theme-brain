@@ -7,6 +7,7 @@ module.exports = ({ actions }) => {
       slug: String!
       rawContent: String
       content: String
+      noteTemplate: String
       aliases: [String]
       outboundReferences: [String]
       outboundReferenceNotes: [BrainNote]
