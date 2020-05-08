@@ -29,5 +29,10 @@
     "remark-stringify": "^8.0.0",
     "unified": "^9.0.0",
     "react-cytoscapejs": "^1.2.1"
-  }
+  },
+  "keywords": [
+    "gatsby",
+    "gatsby-plugin",
+    "gatsby-theme"
+  ]
 }
