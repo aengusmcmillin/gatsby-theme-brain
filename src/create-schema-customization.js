@@ -14,7 +14,21 @@ module.exports = ({ actions }) => {
       inboundReferences: [String]
       inboundReferenceNotes: [BrainNote] @link(from: "inboundReferenceNotes___NODE")
       inboundReferencePreview: [InboundReferencePreview]
+      externalInboundReferences: [ExternalInboundReference]
+      externalOutboundReferences: [ExternalOutboundReference]
       childMdx: Mdx
+    }
+
+    type ExternalInboundReference {
+      siteName: String!
+      sourcePage: String!
+      previewHtml: String!
+    }
+
+    type ExternalOutboundReference {
+      targetSite: String!
+      targetPage: String!
+      previewHtml: String!
     }
 
     type InboundReferencePreview @infer {

@@ -142,6 +142,29 @@ const createFSMachine = (
 module.exports = (api, pluginOptions) => {
   const fsMachine = createFSMachine(api, pluginOptions);
 
+  let externalMaps = pluginOptions.mappedExternalBrains || {};
+  let externalMapsParsed = {};
+  for (const mapName in externalMaps) {
+    const map = externalMaps[mapName];
+    console.log(map);
+    await http.get(map, function (res) {
+      res.setEncoding("utf8");
+      let rawData = "";
+      res.on("data", (chunk) => {
+        rawData += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const parsedData = JSON.parse(rawData);
+          console.log(parsedData);
+          externalMapsParsed[mapName] = parsedData;
+        } catch (e) {
+          console.error(e.message);
+        }
+      });
+    });
+  }
+
   api.emitter.on(`BOOTSTRAP_FINISHED`, () => {
     fsMachine.send(`BOOTSTRAP_FINISHED`);
   });
@@ -184,7 +207,8 @@ function generateNodes(
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
     markdownNotes,
-    pluginOptions
+    pluginOptions,
+    externalMapsParsed
   );
 
   let noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
@@ -197,6 +221,12 @@ function generateNodes(
 
     references.forEach(({ text, previewMarkdown }) => {
       let reference = text;
+
+      const externalRefMatch = /(.*(?=\/.*))/;
+      let externalRef = reference.match(externalRefMatch);
+      if (externalRef !== null) {
+      }
+
       let lower = reference.toLowerCase();
 
       if (nameToSlugMap[lower] == null) {
@@ -355,7 +385,11 @@ function findDeepestChildForPosition(parent, tree, position) {
   };
 }
 
-function processMarkdownNotes(markdownNotes, pluginOptions) {
+function processMarkdownNotes(
+  markdownNotes,
+  pluginOptions,
+  externalMapsParsed
+) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
   let allReferences = [];
