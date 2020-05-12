@@ -19,7 +19,8 @@ module.exports = (
     bracketRegexExclusive,
     originalRawContent,
     nameToSlugMap,
-    rootPath
+    rootPath,
+    pluginOptions.hideDoubleBrackets || false
   );
 
   if (pluginOptions.linkifyHashtags) {
@@ -35,7 +36,8 @@ module.exports = (
       hashtagRegexExclusive,
       newRawContent,
       nameToSlugMap,
-      rootPath
+      rootPath,
+      false
     );
   }
 
@@ -47,7 +49,8 @@ function replaceBasedOnRegex(
   regexExclusive,
   originalRawContent,
   nameToSlugMap,
-  rootPath
+  rootPath,
+  replaceWithJustText
 ) {
   let newRawContent = originalRawContent;
   let replacementMatches = originalRawContent.match(regexInclusive);
@@ -62,7 +65,9 @@ function replaceBasedOnRegex(
       let justText = match.match(regexExclusive)[0];
       let link = nameToSlugMap[justText.toLowerCase()];
       let linkPath = path.join("/", rootPath, link);
-      let linkified = `[${match}](${linkPath})`;
+      let linkified = `[${
+        replaceWithJustText ? justText : match
+      }](${linkPath})`;
       newRawContent = newRawContent.split(match).join(linkified);
     });
 

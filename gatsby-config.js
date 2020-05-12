@@ -7,6 +7,7 @@ module.exports = ({
   rootNote = "brain", // Name of the note that will be used as the 'index' note. So in this case brain.md would generate the root page of the brain.
   mdxOtherwiseConfigured = false, // Used to resolve a bug in gatsby-plugin-mdx
   linkifyHashtags = false, // Enable this if you want to link hashtags. E.g. #Test would link to (and create if needed) https://example.com/brain/test
+  hideDoubleBrackets = false, // Enable this if you want to hide the double brackets that are converted to links (e.g. [[page]] turns into [page](https://example.com/brain/page))
 }) => ({
   plugins: [
     !mdxOtherwiseConfigured && {
