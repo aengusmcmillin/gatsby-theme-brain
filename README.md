@@ -4,6 +4,10 @@ Use this theme to integrate [Roam Research](https://roamresearch.com/) inspired 
 
 View a demo at https://twitter.com/aengusmcmillin/status/1249845320239984640
 
+### Note: This Theme Requires NodeJS v12
+
+If you encounter an error along the lines of `content.matchAll(...) is not a function`, you will need to update your version of node to version 12.
+
 ## Features
 
 ### Double square bracket linking
