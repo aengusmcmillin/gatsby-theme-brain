@@ -2,7 +2,7 @@ module.exports = ({ actions }) => {
   const { createTypes } = actions;
 
   const typeDefs = `
-    type BrainNote implements Node {
+    type BrainNote implements Node @infer {
       title: String!
       slug: String!
       rawContent: String
@@ -17,7 +17,7 @@ module.exports = ({ actions }) => {
       childMdx: Mdx
     }
 
-    type InboundReferencePreview {
+    type InboundReferencePreview @infer {
       source: String!
       previewHtml: String!
     }
