@@ -100,11 +100,14 @@ module.exports = (
     };
 
     let outboundReferences = note.outboundReferences;
-    brainNoteNode.outboundReferences = outboundReferences
-      // Use the slug for easier use in queries
-      .map((match) => nameToSlugMap[match.text.toLowerCase()])
-      // Filter duplicates
-      .filter((a, b) => outboundReferences.indexOf(a) === b);
+
+    // Use the slug for easier use in queries
+    let outboundReferenceSlugs = outboundReferences.map(
+      (match) => nameToSlugMap[match.text.toLowerCase()]
+    );
+
+    // Remove duplicates
+    brainNoteNode.outboundReferences = [...new Set(outboundReferenceSlugs)];
 
     let inboundReferences = backlinkMap[slug] || [];
     let inboundReferenceSlugs = inboundReferences.map(({ source }) => source);
