@@ -8,13 +8,178 @@ const markdown = require("remark-parse");
 const stringifyMd = require("remark-stringify");
 const html = require("rehype-stringify");
 const remark2rehype = require("remark-rehype");
+const path = require("path");
+
+const { Machine, interpret } = require(`xstate`);
 
 const textNoEscaping = require("./text-no-escaping");
 
-module.exports = (
-  { actions, createNodeId, createContentDigest },
+const chokidar = require("chokidar");
+
+const createFSMachine = (
+  { actions, createNodeId, createContentDigest, reporter },
   pluginOptions
 ) => {
+  // For every path that is reported before the 'ready' event, we throw them
+  // into a queue and then flush the queue when 'ready' event arrives.
+  // After 'ready', we handle the 'add' event without putting it into a queue.
+  let pathQueue = [];
+  const flushPathQueue = () => {
+    let queue = pathQueue.slice();
+    pathQueue = null;
+    return Promise.all(
+      // eslint-disable-next-line consistent-return
+      queue.map(({ op, path }) => {
+        switch (op) {
+          case `delete`:
+          case `upsert`:
+            return generateNodes(
+              actions,
+              createNodeId,
+              createContentDigest,
+              pluginOptions
+            );
+        }
+      })
+    );
+  };
+
+  const log = (expr) => (ctx, action, meta) => {
+    if (meta.state.matches(`BOOTSTRAP.BOOTSTRAPPED`)) {
+      reporter.info(expr(ctx, action, meta));
+    }
+  };
+
+  const fsMachine = Machine(
+    {
+      id: `fs`,
+      type: `parallel`,
+      states: {
+        BOOTSTRAP: {
+          initial: `BOOTSTRAPPING`,
+          states: {
+            BOOTSTRAPPING: {
+              on: {
+                BOOTSTRAP_FINISHED: `BOOTSTRAPPED`,
+              },
+            },
+            BOOTSTRAPPED: {
+              type: `final`,
+            },
+          },
+        },
+        CHOKIDAR: {
+          initial: `NOT_READY`,
+          states: {
+            NOT_READY: {
+              on: {
+                CHOKIDAR_READY: `READY`,
+                CHOKIDAR_ADD: { actions: `queueNodeProcessing` },
+                CHOKIDAR_CHANGE: { actions: `queueNodeProcessing` },
+                CHOKIDAR_UNLINK: { actions: `queueNodeDeleting` },
+              },
+              exit: `flushPathQueue`,
+            },
+            READY: {
+              on: {
+                CHOKIDAR_ADD: {
+                  actions: [
+                    `generateNodes`,
+                    log(
+                      (_, { pathType, path }) => `added ${pathType} at ${path}`
+                    ),
+                  ],
+                },
+                CHOKIDAR_CHANGE: {
+                  actions: [
+                    `generateNodes`,
+                    log(
+                      (_, { pathType, path }) =>
+                        `changed ${pathType} at ${path}`
+                    ),
+                  ],
+                },
+                CHOKIDAR_UNLINK: {
+                  actions: [
+                    `generateNodes`,
+                    log(
+                      (_, { pathType, path }) =>
+                        `deleted ${pathType} at ${path}`
+                    ),
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      actions: {
+        generateNodes(_) {
+          generateNodes(
+            actions,
+            createNodeId,
+            createContentDigest,
+            pluginOptions
+          );
+        },
+        flushPathQueue(_, { resolve, reject }) {
+          flushPathQueue().then(resolve, reject);
+        },
+        queueNodeDeleting(_, { path }) {
+          pathQueue.push({ op: `delete`, path });
+        },
+        queueNodeProcessing(_, { path }) {
+          pathQueue.push({ op: `upsert`, path });
+        },
+      },
+    }
+  );
+  return interpret(fsMachine).start();
+};
+
+module.exports = (api, pluginOptions) => {
+  const fsMachine = createFSMachine(api, pluginOptions);
+
+  api.emitter.on(`BOOTSTRAP_FINISHED`, () => {
+    fsMachine.send(`BOOTSTRAP_FINISHED`);
+  });
+  generateNodes(
+    api.actions,
+    api.createNodeId,
+    api.createContentDigest,
+    pluginOptions
+  );
+
+  const watchPath = path.resolve(process.cwd(), pluginOptions.notesDirectory);
+  const watcher = chokidar.watch(watchPath);
+
+  watcher.on(`add`, (path) => {
+    fsMachine.send({ type: `CHOKIDAR_ADD`, pathType: `file`, path });
+  });
+
+  watcher.on(`change`, (path) => {
+    fsMachine.send({ type: `CHOKIDAR_CHANGE`, pathType: `file`, path });
+  });
+
+  watcher.on(`unlink`, (path) => {
+    fsMachine.send({ type: `CHOKIDAR_UNLINK`, pathType: `file`, path });
+  });
+
+  return new Promise((resolve, reject) => {
+    watcher.on(`ready`, () => {
+      fsMachine.send({ type: `CHOKIDAR_READY`, resolve, reject });
+    });
+  });
+};
+
+function generateNodes(
+  actions,
+  createNodeId,
+  createContentDigest,
+  pluginOptions
+) {
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
     markdownNotes,
@@ -100,11 +265,14 @@ module.exports = (
     };
 
     let outboundReferences = note.outboundReferences;
-    brainNoteNode.outboundReferences = outboundReferences
-      // Use the slug for easier use in queries
-      .map((match) => nameToSlugMap[match.text.toLowerCase()])
-      // Filter duplicates
-      .filter((a, b) => outboundReferences.indexOf(a) === b);
+
+    // Use the slug for easier use in queries
+    let outboundReferenceSlugs = outboundReferences.map(
+      (match) => nameToSlugMap[match.text.toLowerCase()]
+    );
+
+    // Remove duplicates
+    brainNoteNode.outboundReferences = [...new Set(outboundReferenceSlugs)];
 
     let inboundReferences = backlinkMap[slug] || [];
     let inboundReferenceSlugs = inboundReferences.map(({ source }) => source);
@@ -155,7 +323,7 @@ module.exports = (
 
     createNode(brainNoteNode);
   }
-};
+}
 
 function findDeepestChildForPosition(parent, tree, position) {
   if (!tree.children || tree.children.length == 0) {
