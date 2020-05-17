@@ -17,7 +17,7 @@ const textNoEscaping = require("./text-no-escaping");
 const chokidar = require("chokidar");
 
 const createFSMachine = (
-  { actions, getNode, createNodeId, createContentDigest, reporter },
+  { actions, createNodeId, createContentDigest, reporter },
   pluginOptions
 ) => {
   // For every path that is reported before the 'ready' event, we throw them
@@ -84,7 +84,7 @@ const createFSMachine = (
               on: {
                 CHOKIDAR_ADD: {
                   actions: [
-                    `createAndProcessNode`,
+                    `generateNodes`,
                     log(
                       (_, { pathType, path }) => `added ${pathType} at ${path}`
                     ),
@@ -92,7 +92,7 @@ const createFSMachine = (
                 },
                 CHOKIDAR_CHANGE: {
                   actions: [
-                    `createAndProcessNode`,
+                    `generateNodes`,
                     log(
                       (_, { pathType, path }) =>
                         `changed ${pathType} at ${path}`
@@ -101,7 +101,7 @@ const createFSMachine = (
                 },
                 CHOKIDAR_UNLINK: {
                   actions: [
-                    `deletePathNode`,
+                    `generateNodes`,
                     log(
                       (_, { pathType, path }) =>
                         `deleted ${pathType} at ${path}`
@@ -116,15 +116,7 @@ const createFSMachine = (
     },
     {
       actions: {
-        createAndProcessNode(_, { pathType, path }) {
-          generateNodes(
-            actions,
-            createNodeId,
-            createContentDigest,
-            pluginOptions
-          );
-        },
-        deletePathNode(_, { pathType, path }, { state }) {
+        generateNodes(_) {
           generateNodes(
             actions,
             createNodeId,
@@ -161,8 +153,8 @@ module.exports = (api, pluginOptions) => {
   );
 
   const watchPath = path.resolve(process.cwd(), pluginOptions.notesDirectory);
-  console.log(`watching path ${watchPath}`);
   const watcher = chokidar.watch(watchPath);
+
   watcher.on(`add`, (path) => {
     fsMachine.send({ type: `CHOKIDAR_ADD`, pathType: `file`, path });
   });
@@ -173,14 +165,6 @@ module.exports = (api, pluginOptions) => {
 
   watcher.on(`unlink`, (path) => {
     fsMachine.send({ type: `CHOKIDAR_UNLINK`, pathType: `file`, path });
-  });
-
-  watcher.on(`addDir`, (path) => {
-    fsMachine.send({ type: `CHOKIDAR_ADD`, pathType: `directory`, path });
-  });
-
-  watcher.on(`unlinkDir`, (path) => {
-    fsMachine.send({ type: `CHOKIDAR_UNLINK`, pathType: `directory`, path });
   });
 
   return new Promise((resolve, reject) => {
@@ -196,7 +180,6 @@ function generateNodes(
   createContentDigest,
   pluginOptions
 ) {
-  console.log("GENERATING NODES");
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
     markdownNotes,
