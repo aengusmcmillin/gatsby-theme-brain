@@ -7,7 +7,8 @@
   "scripts": {
     "build": "gatsby build",
     "develop": "gatsby develop",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "test": "jest"
   },
   "peerDependencies": {
     "gatsby": "^2.20.23",
@@ -15,20 +16,27 @@
     "react-dom": "^16.13.1"
   },
   "devDependencies": {
+    "babel-jest": "^26.0.1",
+    "babel-preset-gatsby": "^0.4.2",
+    "eslint": "^7.0.0",
     "gatsby": "^2.20.23",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^26.0.1",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "react-test-renderer": "^16.13.1"
   },
   "dependencies": {
     "@mdx-js/mdx": "^1.5.8",
     "@mdx-js/react": "^1.5.8",
+    "chokidar": "^3.4.0",
     "gatsby-plugin-mdx": "^1.1.8",
     "gatsby-transformer-remark": "^2.7.2",
+    "react-cytoscapejs": "^1.2.1",
     "rehype-stringify": "^7.0.0",
     "remark-rehype": "^6.0.0",
     "remark-stringify": "^8.0.0",
-    "unified": "^9.0.0",
-    "react-cytoscapejs": "^1.2.1"
+    "unified": "^9.0.0"
   },
   "keywords": [
     "gatsby",
