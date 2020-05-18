@@ -1,5 +1,5 @@
 import React from "react";
-import MDXRenderer from "gatsby-plugin-mdx/mdx-renderer";
+import { MDXRenderer } from "gatsby-plugin-mdx";
 
 const BrainNote = ({ note }) => {
   let references = [];

@@ -4,7 +4,7 @@ module.exports = (
   originalRawContent,
   nameToSlugMap,
   rootPath,
-  pluginOptions
+  { linkifyHashtags, hideDoubleBrackets }
 ) => {
   // Find matches for content between double brackets
   // e.g. [[Example]] -> Example
@@ -20,10 +20,10 @@ module.exports = (
     originalRawContent,
     nameToSlugMap,
     rootPath,
-    pluginOptions.hideDoubleBrackets || false
+    hideDoubleBrackets || false
   );
 
-  if (pluginOptions.linkifyHashtags) {
+  if (linkifyHashtags) {
     // Find matches for content after hashtag
     // e.g. #Example -> Example
     const hashtagRegexExclusive = /(?<=(^|\s)#)\w*\b/g;
