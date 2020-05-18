@@ -152,7 +152,8 @@ module.exports = (api, pluginOptions) => {
     pluginOptions
   );
 
-  const watchPath = path.resolve(process.cwd(), pluginOptions.notesDirectory);
+  const notesDirectory = pluginOptions.notesDirectory || "content/brain/";
+  const watchPath = path.resolve(process.cwd(), notesDirectory);
   const watcher = chokidar.watch(watchPath);
 
   watcher.on(`add`, (path) => {
