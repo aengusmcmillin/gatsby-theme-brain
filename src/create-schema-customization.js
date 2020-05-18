@@ -10,9 +10,9 @@ module.exports = ({ actions }) => {
       noteTemplate: String
       aliases: [String]
       outboundReferences: [String]
-      outboundReferenceNotes: [BrainNote]
+      outboundReferenceNotes: [BrainNote] @link(from: "outboundReferenceNotes___NODE")
       inboundReferences: [String]
-      inboundReferenceNotes: [BrainNote]
+      inboundReferenceNotes: [BrainNote] @link(from: "inboundReferenceNotes___NODE")
       inboundReferencePreview: [InboundReferencePreview]
       childMdx: Mdx
     }
