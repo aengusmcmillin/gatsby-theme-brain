@@ -253,7 +253,7 @@ function generateNodes(
       id: createNodeId(`${slug} >>> BrainNote`),
       title: note.title,
       slug: slug,
-      content: note.content,
+      content: newRawContent,
       rawContent: newRawContent,
       absolutePath: note.fullPath,
       noteTemplate: note.noteTemplate,
@@ -442,7 +442,7 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
 
     slugToNoteMap[slug] = {
       title: title,
-      content: content,
+      content: rawFile,
       rawContent: rawFile,
       fullPath: fullPath,
       frontmatter: frontmatter,
