@@ -28,5 +28,8 @@ module.exports = async (externalMaps) => {
         });
       });
     }
+    if (activeRequests == 0) {
+      resolve(externalMapsParsed);
+    }
   });
 };
