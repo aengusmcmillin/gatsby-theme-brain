@@ -1,5 +1,14 @@
-const http = require("http");
-const url = require("url");
+var adapterFor = (function () {
+  var url = require("url"),
+    adapters = {
+      "http:": require("http"),
+      "https:": require("https"),
+    };
+
+  return function (inputUrl) {
+    return adapters[url.parse(inputUrl).protocol];
+  };
+})();
 
 module.exports = async (externalMaps) => {
   return new Promise((resolve) => {
@@ -8,7 +17,7 @@ module.exports = async (externalMaps) => {
     for (const mapName in externalMaps) {
       activeRequests++;
       const map = externalMaps[mapName];
-      http.get(map, function (res) {
+      adapterFor(map).get(map, function (res) {
         res.setEncoding("utf8");
         let rawData = "";
         res.on("data", (chunk) => {
