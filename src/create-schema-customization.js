@@ -22,6 +22,7 @@ module.exports = ({ actions }) => {
     type ExternalInboundReference {
       siteName: String!
       sourcePage: String!
+      sourceUrl: String!
       previewHtml: String!
     }
 

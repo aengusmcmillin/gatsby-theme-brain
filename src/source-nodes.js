@@ -16,9 +16,15 @@ const textNoEscaping = require("./text-no-escaping");
 
 const chokidar = require("chokidar");
 
+const http = require("http");
+const url = require("url");
+const externalMapFetcher = require("./external-map-fetcher");
+const generateBrainMap = require("./generate-brain-map");
+
 const createFSMachine = (
   { actions, createNodeId, createContentDigest, reporter },
-  pluginOptions
+  pluginOptions,
+  externalMapsParsed
 ) => {
   // For every path that is reported before the 'ready' event, we throw them
   // into a queue and then flush the queue when 'ready' event arrives.
@@ -37,7 +43,8 @@ const createFSMachine = (
               actions,
               createNodeId,
               createContentDigest,
-              pluginOptions
+              pluginOptions,
+              externalMapsParsed
             );
         }
       })
@@ -121,7 +128,8 @@ const createFSMachine = (
             actions,
             createNodeId,
             createContentDigest,
-            pluginOptions
+            pluginOptions,
+            externalMapsParsed
           );
         },
         flushPathQueue(_, { resolve, reject }) {
@@ -139,31 +147,11 @@ const createFSMachine = (
   return interpret(fsMachine).start();
 };
 
-module.exports = (api, pluginOptions) => {
-  const fsMachine = createFSMachine(api, pluginOptions);
-
+module.exports = async (api, pluginOptions) => {
   let externalMaps = pluginOptions.mappedExternalBrains || {};
-  let externalMapsParsed = {};
-  for (const mapName in externalMaps) {
-    const map = externalMaps[mapName];
-    console.log(map);
-    await http.get(map, function (res) {
-      res.setEncoding("utf8");
-      let rawData = "";
-      res.on("data", (chunk) => {
-        rawData += chunk;
-      });
-      res.on("end", () => {
-        try {
-          const parsedData = JSON.parse(rawData);
-          console.log(parsedData);
-          externalMapsParsed[mapName] = parsedData;
-        } catch (e) {
-          console.error(e.message);
-        }
-      });
-    });
-  }
+  let externalMapsParsed = await externalMapFetcher(externalMaps);
+
+  const fsMachine = createFSMachine(api, pluginOptions, externalMapsParsed);
 
   api.emitter.on(`BOOTSTRAP_FINISHED`, () => {
     fsMachine.send(`BOOTSTRAP_FINISHED`);
@@ -172,7 +160,8 @@ module.exports = (api, pluginOptions) => {
     api.actions,
     api.createNodeId,
     api.createContentDigest,
-    pluginOptions
+    pluginOptions,
+    externalMapsParsed
   );
 
   const notesDirectory = pluginOptions.notesDirectory || "content/brain/";
@@ -184,11 +173,19 @@ module.exports = (api, pluginOptions) => {
   });
 
   watcher.on(`change`, (path) => {
-    fsMachine.send({ type: `CHOKIDAR_CHANGE`, pathType: `file`, path });
+    fsMachine.send({
+      type: `CHOKIDAR_CHANGE`,
+      pathType: `file`,
+      path,
+    });
   });
 
   watcher.on(`unlink`, (path) => {
-    fsMachine.send({ type: `CHOKIDAR_UNLINK`, pathType: `file`, path });
+    fsMachine.send({
+      type: `CHOKIDAR_UNLINK`,
+      pathType: `file`,
+      path,
+    });
   });
 
   return new Promise((resolve, reject) => {
@@ -202,30 +199,50 @@ function generateNodes(
   actions,
   createNodeId,
   createContentDigest,
-  pluginOptions
+  pluginOptions,
+  externalMapsParsed
 ) {
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
     markdownNotes,
-    pluginOptions,
-    externalMapsParsed
+    pluginOptions
   );
+
+  let brainMapUrl = pluginOptions.brainMapUrl || "";
+  let externalInboundReferences = new Map();
+  for (let mapName in externalMapsParsed) {
+    let map = externalMapsParsed[mapName];
+    map["externalReferences"]
+      .filter((it) => {
+        return it["targetSite"] == brainMapUrl;
+      })
+      .map(({ targetSite, targetPage, sourcePage, previewHtml }) => {
+        let externalUrl = url.resolve(map["rootDomain"], sourcePage);
+
+        if (externalInboundReferences[targetPage] == null) {
+          externalInboundReferences[targetPage] = [];
+        }
+        externalInboundReferences[targetPage].push({
+          siteName: mapName,
+          sourcePage: sourcePage,
+          sourceUrl: externalUrl,
+          previewHtml: previewHtml,
+        });
+      });
+  }
 
   let noteTemplate = pluginOptions.noteTemplate || "./templates/brain.js";
   noteTemplate = require.resolve(noteTemplate);
 
   let backlinkMap = new Map();
 
-  allReferences.forEach(({ source, references }) => {
+  let externalRefMap = new Map();
+
+  allReferences.forEach(({ source, references, externalReferences }) => {
     if (references == null) return;
 
     references.forEach(({ text, previewMarkdown }) => {
       let reference = text;
-
-      const externalRefMatch = /(.*(?=\/.*))/;
-      let externalRef = reference.match(externalRefMatch);
-      if (externalRef !== null) {
-      }
 
       let lower = reference.toLowerCase();
 
@@ -244,9 +261,11 @@ function generateNodes(
             frontmatter: {
               title: slug,
             },
+            aliases: [],
             noteTemplate: noteTemplate,
             outboundReferences: [],
             inboundReferences: [],
+            externalOutboundReferences: [],
           };
           nameToSlugMap[slug] = slug;
         }
@@ -263,6 +282,27 @@ function generateNodes(
         previewMarkdown: previewMarkdown,
       });
     });
+
+    externalReferences.forEach(({ text, site, page }) => {
+      let lower = text.toLowerCase();
+      let externalMap = externalMapsParsed[site];
+      if (!externalMap) {
+        return;
+      }
+      let rootDomain = externalMap["rootDomain"];
+      let externalPages = externalMap["pages"];
+      let linkedPage = null;
+      for (var externalPage in externalPages) {
+        let aliases = externalPages[externalPage];
+        if (aliases.includes(page)) {
+          linkedPage = externalPage;
+        }
+      }
+      if (linkedPage !== null) {
+        let externalUrl = url.resolve(rootDomain, linkedPage);
+        externalRefMap[lower] = externalUrl;
+      }
+    });
   });
 
   // Create Nodes
@@ -275,6 +315,7 @@ function generateNodes(
     const newRawContent = insertLinks(
       note.content,
       nameToSlugMap,
+      externalRefMap,
       rootPath,
       pluginOptions
     );
@@ -287,6 +328,7 @@ function generateNodes(
       rawContent: newRawContent,
       absolutePath: note.fullPath,
       noteTemplate: note.noteTemplate,
+      aliases: note.aliases,
       children: [],
       parent: null,
       internal: {
@@ -315,6 +357,7 @@ function generateNodes(
         let linkifiedMarkdown = insertLinks(
           previewMarkdown,
           nameToSlugMap,
+          externalRefMap,
           rootPath,
           pluginOptions
         );
@@ -328,6 +371,33 @@ function generateNodes(
         return {
           source: source,
           previewMarkdown: linkifiedMarkdown,
+          previewHtml: previewHtml,
+        };
+      }
+    );
+
+    brainNoteNode.externalInboundReferences = externalInboundReferences[slug];
+    brainNoteNode.externalOutboundReferences = note.externalOutboundReferences.map(
+      ({ text, site, page, previewMarkdown }) => {
+        let linkifiedMarkdown = insertLinks(
+          previewMarkdown,
+          nameToSlugMap,
+          externalRefMap,
+          rootPath,
+          pluginOptions
+        );
+
+        let previewHtml = unified()
+          .use(markdown, { gfm: true, commonmark: true, pedantic: true })
+          .use(remark2rehype)
+          .use(html)
+          .processSync(linkifiedMarkdown)
+          .toString();
+        let rootDomain = externalMapsParsed[site]["rootDomain"];
+
+        return {
+          targetSite: rootDomain,
+          targetPage: page,
           previewHtml: previewHtml,
         };
       }
@@ -354,6 +424,8 @@ function generateNodes(
 
     createNode(brainNoteNode);
   }
+
+  generateBrainMap(pluginOptions, slugToNoteNodeMap);
 }
 
 function findDeepestChildForPosition(parent, tree, position) {
@@ -385,11 +457,7 @@ function findDeepestChildForPosition(parent, tree, position) {
   };
 }
 
-function processMarkdownNotes(
-  markdownNotes,
-  pluginOptions,
-  externalMapsParsed
-) {
+function processMarkdownNotes(markdownNotes, pluginOptions) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
   let allReferences = [];
@@ -410,7 +478,9 @@ function processMarkdownNotes(
       nameToSlugMap[frontmatter.title.toLowerCase()] = slug;
     }
 
+    let aliases = [];
     if (frontmatter.aliases != null) {
+      aliases = frontmatter.aliases;
       frontmatter.aliases
         .map((a) => a.toLowerCase())
         .forEach((alias) => {
@@ -437,7 +507,10 @@ function processMarkdownNotes(
         [...content.matchAll(hashtagRegexExclusive)] || [];
       outboundReferences = outboundReferences.concat(hashtagReferences);
     }
-    outboundReferences = outboundReferences.map(function (match) {
+    let internalReferences = [];
+    let externalReferences = [];
+    // outboundReferences =
+    outboundReferences.forEach((match) => {
       let text = match[0];
       let start = match.index;
       let { parent } = findDeepestChildForPosition(null, tree, start);
@@ -460,14 +533,28 @@ function processMarkdownNotes(
         .freeze();
       let previewMarkdown = processor.stringify(parent.node);
 
-      return {
-        text: text,
-        previewMarkdown: previewMarkdown,
-      };
+      const externalRefMatch = /(.*)\/(.*)/;
+      let externalRef = text.match(externalRefMatch);
+      if (externalRef !== null) {
+        // External reference
+        externalReferences.push({
+          text: text,
+          site: externalRef[1],
+          page: externalRef[2],
+          previewMarkdown: previewMarkdown,
+        });
+      } else {
+        // Internal reference
+        internalReferences.push({
+          text: text,
+          previewMarkdown: previewMarkdown,
+        });
+      }
     });
     allReferences.push({
       source: slug,
-      references: outboundReferences,
+      references: internalReferences,
+      externalReferences: externalReferences,
     });
 
     if (frontmatter.title == null) {
@@ -480,7 +567,9 @@ function processMarkdownNotes(
       rawContent: rawFile,
       fullPath: fullPath,
       frontmatter: frontmatter,
-      outboundReferences: outboundReferences,
+      aliases: aliases,
+      outboundReferences: internalReferences,
+      externalOutboundReferences: externalReferences,
       noteTemplate: noteTemplate,
       inboundReferences: [],
     };

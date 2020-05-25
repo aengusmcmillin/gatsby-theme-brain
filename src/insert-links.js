@@ -3,6 +3,7 @@ const path = require("path");
 module.exports = (
   originalRawContent,
   nameToSlugMap,
+  externalRefMap,
   rootPath,
   pluginOptions
 ) => {
@@ -19,6 +20,7 @@ module.exports = (
     bracketRegexExclusive,
     originalRawContent,
     nameToSlugMap,
+    externalRefMap,
     rootPath,
     pluginOptions.hideDoubleBrackets || false
   );
@@ -36,6 +38,7 @@ module.exports = (
       hashtagRegexExclusive,
       newRawContent,
       nameToSlugMap,
+      externalRefMap,
       rootPath,
       false
     );
@@ -49,6 +52,7 @@ function replaceBasedOnRegex(
   regexExclusive,
   originalRawContent,
   nameToSlugMap,
+  externalRefMap,
   rootPath,
   replaceWithJustText
 ) {
@@ -63,12 +67,20 @@ function replaceBasedOnRegex(
     .filter((a, b) => replacementMatches.indexOf(a) === b)
     .forEach((match) => {
       let justText = match.match(regexExclusive)[0];
-      let link = nameToSlugMap[justText.toLowerCase()];
-      let linkPath = path.join("/", rootPath, link);
-      let linkified = `[${
-        replaceWithJustText ? justText : match
-      }](${linkPath})`;
-      newRawContent = newRawContent.split(match).join(linkified);
+      let name = justText.toLowerCase();
+      if (name in nameToSlugMap) {
+        let link = nameToSlugMap[name];
+        let linkPath = path.join("/", rootPath, link);
+        let linkified = `[${
+          replaceWithJustText ? justText : match
+        }](${linkPath})`;
+        newRawContent = newRawContent.split(match).join(linkified);
+      }
+      if (name in externalRefMap) {
+        let link = externalRefMap[name];
+        let linkified = `[${replaceWithJustText ? justText : match}](${link})`;
+        newRawContent = newRawContent.split(match).join(linkified);
+      }
     });
 
   return newRawContent;
