@@ -22,11 +22,33 @@ const BrainNote = ({ note }) => {
       );
     }
   }
+
+  let externalRefBlock = [];
+  if (note.externalInboundReferences !== null) {
+    let refs = note.externalInboundReferences.map((ref) => (
+      <li>
+        <a href={ref.sourceUrl}>
+          {ref.siteName}/{ref.sourcePage}
+        </a>
+        <br />
+        <div dangerouslySetInnerHTML={{ __html: ref.previewHtml }} />
+      </li>
+    ));
+    if (refs.length > 0) {
+      externalRefBlock = (
+        <>
+          <h2>External References</h2>
+          <ul>{refs}</ul>
+        </>
+      );
+    }
+  }
   return (
     <div id="brainNote">
       <h1>{note.title}</h1>
       <MDXRenderer>{note.childMdx.body}</MDXRenderer>
       {referenceBlock}
+      {externalRefBlock}
     </div>
   );
 };
