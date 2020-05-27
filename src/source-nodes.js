@@ -43,11 +43,16 @@ const createFSMachine = (
     }
   };
 
-  let delay = pluginOptions.timerReloadDelay || 1800000; // default to a 30 minute reload timer
-  const sendTimerAfterDelay = send("TIMER", {
-    delay: delay,
-    id: "delayTimer", // give the event a unique ID
-  });
+  let delay = pluginOptions.timerReloadDelay || 0; // default to not auto reloading
+  let sendTimerAfterDelay;
+  if (delay > 0) {
+    sendTimerAfterDelay = send("TIMER", {
+      delay: delay,
+      id: "delayTimer", // give the event a unique ID
+    });
+  } else {
+    sendTimerAfterDelay = log();
+  }
 
   const cancelTimer = cancel("delayTimer"); // pass the ID of event to cancel
 
