@@ -1,6 +1,9 @@
 var fs = require("fs");
 
-module.exports = ({ brainMapPath, brainMapUrl }, slugToNoteNodeMap) => {
+module.exports = (
+  { brainMapPath = "static/brainmap.json", brainBaseUrl = "" },
+  slugToNoteNodeMap
+) => {
   let path = brainMapPath;
 
   let pages = {};
@@ -27,7 +30,7 @@ module.exports = ({ brainMapPath, brainMapUrl }, slugToNoteNodeMap) => {
   }
 
   let brainMap = {
-    rootDomain: brainMapUrl,
+    rootDomain: brainBaseUrl,
     pages: pages,
     externalReferences: externalReferences,
   };

@@ -110,7 +110,8 @@ const createFSMachine = (
                     cancelTimer,
                     sendTimerAfterDelay,
                     log(
-                      (_, { pathType, path }) => `regenerating nodes at timer`
+                      (_, { pathType, path }) =>
+                        `regenerating nodes after delay`
                     ),
                   ],
                 },
@@ -253,13 +254,13 @@ function generateNodes(
     pluginOptions
   );
 
-  let brainMapUrl = pluginOptions.brainMapUrl || "";
+  let brainBaseUrl = pluginOptions.brainBaseUrl || "";
   let externalInboundReferences = new Map();
   for (let mapName in externalMapsParsed) {
     let map = externalMapsParsed[mapName];
     map["externalReferences"]
       .filter((it) => {
-        return it["targetSite"] == brainMapUrl;
+        return it["targetSite"] == brainBaseUrl;
       })
       .map(({ targetSite, targetPage, sourcePage, previewHtml }) => {
         let externalUrl = url.resolve(map["rootDomain"], sourcePage);
@@ -470,7 +471,10 @@ function generateNodes(
     createNode(brainNoteNode);
   }
 
-  generateBrainMap(pluginOptions, slugToNoteNodeMap);
+  let shouldGenerateBrainMap = pluginOptions.generateBrainMap || false;
+  if (shouldGenerateBrainMap) {
+    generateBrainMap(pluginOptions, slugToNoteNodeMap);
+  }
 }
 
 function findDeepestChildForPosition(parent, tree, position) {
