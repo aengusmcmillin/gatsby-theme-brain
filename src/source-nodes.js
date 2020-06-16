@@ -66,7 +66,8 @@ const createFSMachine = (
       id: "delayTimer", // give the event a unique ID
     });
   } else {
-    sendTimerAfterDelay = log();
+    const defaultLog = (_, ...args) => `unset logging with ${args}`;
+    sendTimerAfterDelay = log(defaultLog);
   }
 
   const cancelTimer = cancel("delayTimer"); // pass the ID of event to cancel
