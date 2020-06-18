@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const generateSlug = require("./generate-slug");
 
 function toRegExp(value) {
   if (typeof value === "string") {
@@ -31,7 +32,7 @@ module.exports = (pluginOptions) => {
     .map((filename) => {
       let slug = pluginOptions.generateSlug
         ? pluginOptions.generateSlug(filename)
-        : path.parse(filename).name.toLowerCase();
+        : generateSlug(path.parse(filename).name);
 
       let fullPath = notesDirectory + filename;
 
