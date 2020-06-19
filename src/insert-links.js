@@ -70,7 +70,7 @@ function replaceBasedOnRegex(
       let name = justText.toLowerCase();
       if (name in nameToSlugMap) {
         let link = nameToSlugMap[name];
-        let linkPath = path.join("/", rootPath, link);
+        let linkPath = rootPath + link;
         let linkified = `[${
           replaceWithJustText ? justText : match
         }](${linkPath})`;

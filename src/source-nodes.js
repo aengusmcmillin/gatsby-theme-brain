@@ -252,7 +252,8 @@ function generateNodes(
   let markdownNotes = getMarkdownNotes(pluginOptions);
   let { slugToNoteMap, nameToSlugMap, allReferences } = processMarkdownNotes(
     markdownNotes,
-    pluginOptions
+    pluginOptions,
+    externalMapsParsed
   );
 
   let brainBaseUrl = pluginOptions.brainBaseUrl || "";
@@ -363,7 +364,7 @@ function generateNodes(
       note.content,
       nameToSlugMap,
       externalRefMap,
-      rootPath,
+      path.join("/", rootPath, "/"),
       pluginOptions
     );
 
@@ -405,7 +406,7 @@ function generateNodes(
           previewMarkdown,
           nameToSlugMap,
           externalRefMap,
-          rootPath,
+          path.join("/", rootPath, "/"),
           pluginOptions
         );
 
@@ -430,7 +431,7 @@ function generateNodes(
           previewMarkdown,
           nameToSlugMap,
           externalRefMap,
-          rootPath,
+          brainBaseUrl,
           pluginOptions
         );
 
@@ -440,8 +441,8 @@ function generateNodes(
           .use(html)
           .processSync(linkifiedMarkdown)
           .toString();
-        let rootDomain = externalMapsParsed[site]["rootDomain"];
 
+        let rootDomain = externalMapsParsed[site]["rootDomain"];
         return {
           targetSite: rootDomain,
           targetPage: page,
@@ -507,7 +508,11 @@ function findDeepestChildForPosition(parent, tree, position) {
   };
 }
 
-function processMarkdownNotes(markdownNotes, pluginOptions) {
+function processMarkdownNotes(
+  markdownNotes,
+  pluginOptions,
+  externalMapsParsed
+) {
   let slugToNoteMap = new Map();
   let nameToSlugMap = new Map();
   let allReferences = [];
@@ -586,13 +591,15 @@ function processMarkdownNotes(markdownNotes, pluginOptions) {
       const externalRefMatch = /(.*)\/(.*)/;
       let externalRef = text.match(externalRefMatch);
       if (externalRef !== null) {
-        // External reference
-        externalReferences.push({
-          text: text,
-          site: externalRef[1],
-          page: externalRef[2],
-          previewMarkdown: previewMarkdown,
-        });
+        if (externalMapsParsed[externalRef[1]]) {
+          // External reference
+          externalReferences.push({
+            text: text,
+            site: externalRef[1],
+            page: externalRef[2],
+            previewMarkdown: previewMarkdown,
+          });
+        }
       } else {
         // Internal reference
         internalReferences.push({
