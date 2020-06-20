@@ -266,6 +266,7 @@ function generateNodes(
       })
       .map(({ targetSite, targetPage, sourcePage, previewHtml }) => {
         let externalUrl = url.resolve(map["rootDomain"], sourcePage);
+        targetPage = nameToSlugMap[generateSlug(targetPage)];
 
         if (externalInboundReferences[targetPage] == null) {
           externalInboundReferences[targetPage] = [];
