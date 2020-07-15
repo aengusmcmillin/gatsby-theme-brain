@@ -13,7 +13,7 @@ module.exports = ({ actions }) => {
       outboundReferenceNotes: [BrainNote] @link(from: "outboundReferenceNotes___NODE")
       inboundReferences: [String]
       inboundReferenceNotes: [BrainNote] @link(from: "inboundReferenceNotes___NODE")
-      inboundReferencePreview: [InboundReferencePreview]
+      inboundReferencePreviews: [InboundReferencePreview]
       externalInboundReferences: [ExternalInboundReference]
       externalOutboundReferences: [ExternalOutboundReference]
       childMdx: Mdx
