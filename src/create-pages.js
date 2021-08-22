@@ -33,7 +33,7 @@ module.exports = async ({ actions, graphql }, pluginOptions) => {
       });
     }
 
-    let notePath = path.join(rootPath, slug);
+    let notePath = path.posix.join(rootPath, slug);
     createPage({
       path: notePath,
       component: path.resolve(note.noteTemplate),

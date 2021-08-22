@@ -38,7 +38,7 @@ module.exports = ({
               return notes.nodes.map((note) => {
                 let notePath = url.resolve(
                   site.siteMetadata.siteUrl,
-                  path.join(rootPath, note.slug)
+                  path.posix.join(rootPath, note.slug)
                 );
                 return Object.assign({}, note.childMdx.frontmatter, {
                   description: note.childMdx.excerpt,
@@ -52,7 +52,7 @@ module.exports = ({
             query: `
             {
               notes: allBrainNote(
-                filter: {childMdx: {frontmatter: {syndicate: {eq: true}}}}, 
+                filter: {childMdx: {frontmatter: {syndicate: {eq: true}}}},
                 sort: {fields: childMdx___frontmatter___date, order: DESC}
               ) {
                 nodes {

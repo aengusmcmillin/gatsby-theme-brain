@@ -365,7 +365,7 @@ function generateNodes(
       note.content,
       nameToSlugMap,
       externalRefMap,
-      path.join("/", rootPath, "/"),
+      path.posix.join("/", rootPath, "/"),
       pluginOptions
     );
 
@@ -407,7 +407,7 @@ function generateNodes(
           previewMarkdown,
           nameToSlugMap,
           externalRefMap,
-          path.join("/", rootPath, "/"),
+          path.posix.join("/", rootPath, "/"),
           pluginOptions
         );
 
