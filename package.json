@@ -31,7 +31,7 @@
     "@mdx-js/react": "^1.5.8",
     "chokidar": "^3.4.0",
     "gatsby-plugin-feed": "^2.5.2",
-    "gatsby-plugin-mdx": "^1.1.8",
+    "gatsby-plugin-mdx": "^2.14.1",
     "gatsby-transformer-remark": "^2.7.2",
     "react-cytoscapejs": "^1.2.1",
     "rehype-stringify": "^7.0.0",
