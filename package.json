@@ -10,8 +10,11 @@
     "clean": "gatsby clean",
     "test": "jest"
   },
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "peerDependencies": {
-    "gatsby": "^2.20.23",
+    "gatsby": "^2.32.0 || ^3.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
@@ -19,7 +22,6 @@
     "babel-jest": "^26.0.1",
     "babel-preset-gatsby": "^0.4.2",
     "eslint": "^7.0.0",
-    "gatsby": "^2.20.23",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.0.1",
     "react": "^16.13.1",
